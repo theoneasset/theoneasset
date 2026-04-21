@@ -1,0 +1,67 @@
+# =====================================================
+# .github/workflows/crawl.yml
+# 하루 3회 크롤링 스케줄러 (GitHub Actions)
+# 서울 기준: 08:00 / 12:00 / 18:00 (UTC+9)
+# =====================================================
+
+name: 강남 매물 크롤링 스케줄러
+
+on:
+  schedule:
+    # KST 08:00 = UTC 23:00 (전날)
+    - cron: '0 23 * * *'
+    # KST 12:00 = UTC 03:00
+    - cron: '0 3 * * *'
+    # KST 18:00 = UTC 09:00
+    - cron: '0 9 * * *'
+
+  # 수동 실행 지원
+  workflow_dispatch:
+    inputs:
+      max_listings:
+        description: '최대 수집 매물 수'
+        required: false
+        default: '50'
+
+jobs:
+  crawl:
+    name: 매물 크롤링
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 크롤링 API 호출
+        run: |
+          echo "🏢 강남 매물 크롤링 시작: $(TZ='Asia/Seoul' date '+%Y-%m-%d %H:%M KST')"
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/crawl")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "HTTP 상태: $HTTP_CODE"
+          echo "응답: $BODY"
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ 크롤링 실패: HTTP $HTTP_CODE"
+            exit 1
+          fi
+          
+          # 신규 매물 수 파싱
+          NEW_COUNT=$(echo "$BODY" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          print(data.get('data', {}).get('newSaved', 0))
+          " 2>/dev/null || echo "0")
+          
+          echo "✅ 완료: 신규 매물 ${NEW_COUNT}건 발견"
+
+      - name: 결과 요약
+        if: always()
+        run: |
+          echo "크롤링 작업 완료"
+          echo "시간: $(TZ='Asia/Seoul' date '+%Y-%m-%d %H:%M KST')"
