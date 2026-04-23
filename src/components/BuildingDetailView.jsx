@@ -27,7 +27,13 @@ const BuildingDetailView = ({ match }) => {
         const detailHtml = await naverService.scrapeFullContent(match.주소);
         const deepInfo = await geminiService.analyzeDeepBuildingInfo(detailHtml, match);
         
+        // Airtable에 캐시 저장 및 마스터 DB 동기화
         await airtableService.saveBuildingCache(match.주소, deepInfo);
+        await airtableService.syncBuildingToMaster(match.주소, {
+          ...deepInfo.specs,
+          건물명: match.건물명
+        });
+        
         setDetailData(deepInfo);
       } catch (error) {
         console.warn('[Safe-Fall] 실시간 수집 실패, 만료된 캐시라도 불러옵니다.');
@@ -50,18 +56,20 @@ const BuildingDetailView = ({ match }) => {
     return (
       <div className="infowindow-inner">
         <div className="infowindow-header">
-          <div className="skeleton skeleton-title" />
-          <div className="skeleton skeleton-text" style={{ width: '40%' }} />
+          <div className="skeleton skeleton-title" style={{ width: '80%' }} />
+          <p style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: '600', animation: 'pulse 1.5s infinite' }}>
+            더원에셋 AI가 정밀 분석 중입니다...
+          </p>
         </div>
         <div className="infowindow-body">
-          <div className="skeleton skeleton-text" />
-          <div className="skeleton skeleton-text" style={{ width: '80%' }} />
-          <div className="tenant-status">
-            <h4 style={{ color: 'var(--accent)' }}>입점 현황 분석 중...</h4>
+          <div className="skeleton skeleton-text" style={{ height: '14px' }} />
+          <div className="skeleton skeleton-text" style={{ width: '90%' }} />
+          <div className="tenant-status" style={{ marginTop: '20px' }}>
+            <div className="skeleton skeleton-text" style={{ width: '40%', height: '16px' }} />
             <div className="skeleton skeleton-text" />
             <div className="skeleton skeleton-text" />
           </div>
-          <div className="skeleton skeleton-chart" />
+          <div className="skeleton skeleton-chart" style={{ borderRadius: '12px' }} />
         </div>
       </div>
     );

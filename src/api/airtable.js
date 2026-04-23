@@ -80,7 +80,6 @@ export const airtableService = {
   // 건물 상세 정보 캐싱 저장
   async saveBuildingCache(address, detailData) {
     try {
-      // 기존 캐시 삭제 로직 (선택 사항: 업데이트 대신 새로 생성)
       await base('BUILDING_CACHE').create([
         {
           fields: {
@@ -92,6 +91,36 @@ export const airtableService = {
       ]);
     } catch (error) {
       console.error('Cache Save Error:', error);
+    }
+  },
+
+  // 건물 마스터 DB 동기화 (중복 방지)
+  async syncBuildingToMaster(address, specs) {
+    try {
+      const existing = await base('BUILDINGS').select({
+        filterByFormula: `{주소} = '${address}'`,
+        maxRecords: 1
+      }).firstPage();
+
+      if (existing.length > 0) {
+        return existing[0].id;
+      }
+
+      const record = await base('BUILDINGS').create([
+        {
+          fields: {
+            '주소': address,
+            '건물명': specs.건물명 || '',
+            '연면적': specs.연면적 || '',
+            '주차': specs.주차 || '',
+            '승강기': specs.승강기 || '',
+            '등록일자': new Date().toISOString().split('T')[0]
+          }
+        }
+      ]);
+      return record[0].id;
+    } catch (error) {
+      console.error('Airtable Sync Error:', error);
     }
   }
 };
