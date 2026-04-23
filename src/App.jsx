@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
-import NaverMap from './components/NaverMap';
+import HybridMap from './components/HybridMap';
+import VWorldMap from './components/VWorldMap';
 import { naverService } from './api/naver';
 import { geminiService } from './api/gemini';
 import { airtableService } from './api/airtable';
@@ -48,11 +49,9 @@ function App() {
     const blogItems = await naverService.searchBlogs(randomKeyword);
 
     for (const item of blogItems) {
-      // 1. Gemini로 기본 데이터 추출
       const extracted = await geminiService.extractBuildingInfo(item.description + " " + item.title);
       
       if (extracted && extracted.주소) {
-        // 2. 마스터 DB와 매칭 (기본 매칭)
         const matchResult = findBestMatch(extracted, masterBuildings);
         
         if (matchResult) {
@@ -100,7 +99,7 @@ function App() {
   }, [masterBuildings, runScanningProcess, matches.length]);
 
   return (
-    <div style={{ display: 'flex', width: '100vw', height: '100vh' }}>
+    <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <Sidebar 
         matches={filteredMatches} 
         filters={filters}
@@ -110,36 +109,21 @@ function App() {
       />
       
       <div style={{ flex: 1, position: 'relative' }}>
-        <NaverMap 
-          matches={filteredMatches} 
-          selectedMatch={selectedMatch} 
-        />
-        
-        <div style={{ 
-          position: 'absolute', 
-          top: '20px', 
-          right: '120px', 
-          zIndex: 5,
-          display: 'flex',
-          gap: '10px'
-        }}>
-          <button 
-            onClick={runScanningProcess}
-            disabled={isScanning}
-            className="glass"
-            style={{
-              padding: '12px 24px',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: '700',
-              border: '1px solid var(--primary)',
-              background: isScanning ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.6)'
-            }}
-          >
-            {isScanning ? '스캐닝 중...' : '지금 수집 시작'}
-          </button>
-        </div>
+        {import.meta.env.VITE_MAP_PROVIDER === 'vworld' ? (
+          <VWorldMap 
+            matches={filteredMatches} 
+            selectedMatch={selectedMatch} 
+            isScanning={isScanning}
+            onStartScan={runScanningProcess}
+          />
+        ) : (
+          <HybridMap 
+            matches={filteredMatches} 
+            selectedMatch={selectedMatch} 
+            isScanning={isScanning}
+            onStartScan={runScanningProcess}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,13 +1,18 @@
 import Airtable from 'airtable';
 
-const base = new Airtable({ apiKey: import.meta.env.VITE_AIRTABLE_API_KEY }).base(
+const airtableKey = import.meta.env.VITE_AIRTABLE_API_KEY || '';
+const apiKey = airtableKey.trim();
+
+const base = new Airtable({ apiKey }).base(
   import.meta.env.VITE_AIRTABLE_BASE_ID
 );
 
 export const airtableService = {
   async getMasterBuildings() {
     try {
-      const records = await base('BUILDINGS').select({
+      // 사용자가 지정한 테이블 ID (강남구 매물_DB 등) 사용
+      const tableId = import.meta.env.VITE_AIRTABLE_TABLE_ID || 'BUILDINGS';
+      const records = await base(tableId).select({
         view: 'Grid view'
       }).all();
       return records.map(record => ({
