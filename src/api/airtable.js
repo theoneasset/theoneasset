@@ -51,8 +51,8 @@ export const airtableService = {
     }
   },
 
-  // 건물 상세 정보 캐싱 조회
-  async getBuildingCache(address) {
+  // 건물 상세 정보 캐싱 조회 (Safe-Fall 지원)
+  async getBuildingCache(address, ignoreExpiration = false) {
     try {
       const records = await base('BUILDING_CACHE').select({
         filterByFormula: `{주소} = '${address}'`,
@@ -65,8 +65,8 @@ export const airtableService = {
         const now = new Date();
         const diffDays = Math.ceil(Math.abs(now - lastUpdated) / (1000 * 60 * 60 * 24));
         
-        // 7일 이내 데이터만 유효
-        if (diffDays <= 7) {
+        // ignoreExpiration이 true면 날짜 상관없이 반환 (파싱 실패 시 백업용)
+        if (ignoreExpiration || diffDays <= 7) {
           return JSON.parse(data.상세데이터);
         }
       }

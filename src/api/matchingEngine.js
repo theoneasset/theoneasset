@@ -48,7 +48,18 @@ export const findBestMatch = (extractedData, masterList) => {
     const rate = calculateMatchingRate(extractedData, master);
     if (rate > maxRate) {
       maxRate = rate;
-      bestMatch = { ...master, matchRate: rate };
+      
+      // [Data Integrity] 데이터 무결성 체크 및 플래그 설정
+      let status = '정상';
+      const isAddressPartial = extractedData.주소 !== master.주소 && 
+                               (master.주소.includes(extractedData.주소) || extractedData.주소.includes(master.주소));
+      const isAreaDifferent = Math.abs(parseFloat(extractedData.전용면적) - parseFloat(master.전용면적)) / parseFloat(master.전용면적) >= 0.05;
+
+      if (isAddressPartial || isAreaDifferent) {
+        status = '검토 필요';
+      }
+
+      bestMatch = { ...master, matchRate: rate, status: status };
     }
   });
 
