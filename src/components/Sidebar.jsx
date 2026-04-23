@@ -2,7 +2,7 @@ import React from 'react';
 import { Target, CheckCircle, AlertCircle, ExternalLink, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const Sidebar = ({ matches, onSelectMatch, isScanning }) => {
+const Sidebar = ({ matches, filters, setFilters, onSelectMatch, isScanning }) => {
   return (
     <div className="sidebar glass">
       <div className="sidebar-header">
@@ -15,10 +15,49 @@ const Sidebar = ({ matches, onSelectMatch, isScanning }) => {
         </div>
       </div>
 
+      <div className="sidebar-filters glass" style={{ margin: '0 16px 20px', padding: '16px', borderRadius: '12px' }}>
+        <h3 style={{ fontSize: '0.9rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Target size={16} color="var(--accent)" /> 지능형 필터 설정
+        </h3>
+        <div style={{ display: 'grid', gap: '10px' }}>
+          <input 
+            type="text" 
+            placeholder="지역 (예: 역삼동)" 
+            className="filter-input"
+            value={filters.dong}
+            onChange={(e) => setFilters({...filters, dong: e.target.value})}
+          />
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input 
+              type="number" 
+              placeholder="최소 가격" 
+              className="filter-input"
+              value={filters.minPrice}
+              onChange={(e) => setFilters({...filters, minPrice: Number(e.target.value)})}
+            />
+            <span style={{ fontSize: '0.8rem' }}>~</span>
+            <input 
+              type="number" 
+              placeholder="최대 가격" 
+              className="filter-input"
+              value={filters.maxPrice}
+              onChange={(e) => setFilters({...filters, maxPrice: Number(e.target.value)})}
+            />
+          </div>
+          <input 
+            type="number" 
+            placeholder="최소 면적 (m²)" 
+            className="filter-input"
+            value={filters.minArea}
+            onChange={(e) => setFilters({...filters, minArea: Number(e.target.value)})}
+          />
+        </div>
+      </div>
+
       <div className="sidebar-content">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <Target size={18} color="var(--accent)" />
-          <h3 style={{ fontSize: '1rem' }}>오늘의 90% 이상 매칭 리스트</h3>
+          <CheckCircle size={18} color="var(--accent)" />
+          <h3 style={{ fontSize: '1rem' }}>필터링된 매칭 리스트 ({matches.length})</h3>
         </div>
 
         <AnimatePresence>

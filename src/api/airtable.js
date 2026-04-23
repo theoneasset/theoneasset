@@ -33,5 +33,21 @@ export const airtableService = {
     } catch (error) {
       console.error('Airtable Save Error:', error);
     }
+  },
+
+  async getPriceHistory(address) {
+    try {
+      const records = await base('PRICE_HISTORY').select({
+        filterByFormula: `{주소} = '${address}'`,
+        sort: [{ field: '날짜', direction: 'asc' }]
+      }).all();
+      return records.map(record => ({
+        date: record.fields.날짜,
+        price: record.fields.가격
+      }));
+    } catch (error) {
+      console.error('Airtable History Error:', error);
+      return [];
+    }
   }
 };

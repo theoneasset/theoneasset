@@ -1,9 +1,12 @@
 import React, { useEffect, useRef } from 'react';
+import { createRoot } from 'react-dom/client';
+import PriceChart from './PriceChart';
 
 const KakaoMap = ({ matches, selectedMatch }) => {
   const mapRef = useRef(null);
   const kakaoMap = useRef(null);
   const markers = useRef([]);
+  const infoWindowRoot = useRef(null);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -29,14 +32,13 @@ const KakaoMap = ({ matches, selectedMatch }) => {
   useEffect(() => {
     if (!kakaoMap.current || !matches) return;
 
-    // Clear existing markers
     markers.current.forEach(m => m.setMap(null));
     markers.current = [];
 
     const geocoder = new window.kakao.maps.services.Geocoder();
 
     matches.forEach(match => {
-      if (match.matchRate < 90) return; // Only 90%+ for map pins
+      if (match.matchRate < 90) return;
 
       geocoder.addressSearch(match.주소, (result, status) => {
         if (status === window.kakao.maps.services.Status.OK) {
@@ -48,25 +50,39 @@ const KakaoMap = ({ matches, selectedMatch }) => {
             title: match.건물명
           });
 
-          const content = `
-            <div class="custom-infowindow">
-              <div class="infowindow-title">${match.matchRate}% Match: ${match.건물명}</div>
-              <div class="infowindow-content">
-                <p><strong>주소:</strong> ${match.주소}</p>
-                <p><strong>가격:</strong> ${match.가격}만원</p>
-                <p><strong>요약:</strong> ${match.summary || '정보 없음'}</p>
-                <a href="${match.link}" target="_blank" class="infowindow-link">원문 링크</a>
-              </div>
-            </div>
-          `;
-
+          // 인포윈도우를 위한 DOM 컨테이너 생성
+          const contentContainer = document.createElement('div');
+          contentContainer.className = 'custom-infowindow';
+          
           const infowindow = new window.kakao.maps.InfoWindow({
-            content: content,
+            content: contentContainer,
             removable: true
           });
 
           window.kakao.maps.event.addListener(marker, 'click', () => {
             infowindow.open(kakaoMap.current, marker);
+            
+            // React 컴포넌트 렌더링
+            if (infoWindowRoot.current) {
+              infoWindowRoot.current.unmount();
+            }
+            
+            infoWindowRoot.current = createRoot(contentContainer);
+            infoWindowRoot.current.render(
+              <div className="infowindow-inner">
+                <div className="infowindow-title">{match.matchRate}% Match: {match.건물명}</div>
+                <div className="infowindow-content">
+                  <p><strong>주소:</strong> {match.주소}</p>
+                  <p><strong>가격:</strong> {match.가격}만원</p>
+                  <p><strong>면적:</strong> {match.전용면적}m²</p>
+                  
+                  {/* 가격 변동 추이 차트 추가 */}
+                  <PriceChart address={match.주소} />
+                  
+                  <a href={match.link} target="_blank" rel="noopener noreferrer" className="infowindow-link">원문 링크 보기</a>
+                </div>
+              </div>
+            );
           });
 
           markers.current.push(marker);

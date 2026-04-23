@@ -24,5 +24,45 @@ export const geminiService = {
       console.error("Gemini Error:", error);
       return null;
     }
+  },
+
+  async analyzeDeepBuildingInfo(html, extractedData) {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+
+    const prompt = `
+      다음은 네이버 지도에서 수집한 건물의 상세 페이지 HTML 데이터(일부)와 우리가 추출한 매물 정보입니다.
+      
+      [매물 정보]
+      주소: ${extractedData.주소}
+      해당 층: ${extractedData.층수}
+      
+      [수집 데이터]
+      ${html?.substring(0, 5000)} // 토큰 제한 고려
+      
+      요구사항:
+      1. 이 데이터에서 건물 스펙(연면적, 주차, 승강기)을 찾아주세요.
+      2. 층별 입점 현황(tenant list)을 파싱해주세요.
+      3. 매물이 나온 층수가 현재 입점 현황상 '공실'이거나, 업종이 변경될 가능성이 있는지 판단해주세요.
+      4. 위 데이터를 종합하여 부동산 전문가 관점에서 분석 리포트를 2-3문장으로 작성해주세요.
+      
+      응답 형식 (JSON):
+      {
+        "specs": { "연면적": "...", "주차": "...", "승강기": "..." },
+        "tenantList": [ { "floor": "1F", "name": "...", "type": "..." } ],
+        "isFloorVacancy": true/false,
+        "industryMatch": true/false,
+        "analysisReport": "..."
+      }
+    `;
+
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const jsonText = response.text().replace(/```json|```/g, "").trim();
+      return JSON.parse(jsonText);
+    } catch (error) {
+      console.error("Gemini Deep Analysis Error:", error);
+      return { specs: {}, tenantList: [], isFloorVacancy: false, industryMatch: false, analysisReport: "데이터 분석 중 오류가 발생했습니다." };
+    }
   }
 };

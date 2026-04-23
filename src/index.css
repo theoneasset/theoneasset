@@ -72,6 +72,30 @@ body {
   padding: 16px;
 }
 
+.sidebar-filters {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filter-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  margin-bottom: 4px;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+}
+
 .match-card {
   margin-bottom: 16px;
   padding: 16px;
@@ -201,4 +225,114 @@ body {
   color: var(--primary);
   text-decoration: none;
   font-weight: 600;
+}
+
+/* Naver Map Enhancements */
+.naver-marker {
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  border: 2px solid white;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  alignItems: center;
+  justifyContent: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.naver-marker .rate {
+  transform: rotate(45deg);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.naver-marker.premium {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  border-color: #fbbf24;
+}
+
+.naver-infowindow {
+  min-width: 320px;
+  max-width: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+  color: white;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.infowindow-header {
+  padding: 16px;
+  background: rgba(99, 102, 241, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rate-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.infowindow-body {
+  padding: 16px;
+}
+
+.building-specs {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+}
+
+.tenant-status, .analysis-report {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.tenant-status h4, .analysis-report h4 {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  color: var(--accent);
+}
+
+.tenant-list {
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.analysis-report p {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  font-style: italic;
+  color: #e2e8f0;
+}
+
+.btn-link {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  margin-top: 16px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.map-control-btn {
+  transition: all 0.3s ease;
+}
+
+.map-control-btn.active {
+  background: rgba(34, 211, 238, 0.2) !important;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
 }

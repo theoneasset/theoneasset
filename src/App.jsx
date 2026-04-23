@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
-import KakaoMap from './components/KakaoMap';
+import NaverMap from './components/NaverMap';
 import { naverService } from './api/naver';
 import { geminiService } from './api/gemini';
 import { airtableService } from './api/airtable';
@@ -13,6 +13,12 @@ function App() {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [masterBuildings, setMasterBuildings] = useState([]);
+  const [filters, setFilters] = useState({
+    dong: '',
+    minPrice: 0,
+    maxPrice: 1000000,
+    minArea: 0
+  });
 
   // 초기 마스터 데이터 로드
   useEffect(() => {
@@ -22,6 +28,14 @@ function App() {
     };
     loadMasterData();
   }, []);
+
+  // 필터링된 매물 리스트
+  const filteredMatches = matches.filter(match => {
+    const matchesDong = !filters.dong || match.주소.includes(filters.dong);
+    const matchesPrice = match.가격 >= filters.minPrice && match.가격 <= filters.maxPrice;
+    const matchesArea = match.전용면적 >= filters.minArea;
+    return matchesDong && matchesPrice && matchesArea;
+  });
 
   const runScanningProcess = useCallback(async () => {
     if (isScanning) return;
@@ -34,55 +48,65 @@ function App() {
     const blogItems = await naverService.searchBlogs(randomKeyword);
 
     for (const item of blogItems) {
-      // 이미 처리된 링크인지 확인 (중복 방지 로직 필요시 추가)
-      
-      // 1. Gemini로 데이터 추출
+      // 1. Gemini로 기본 데이터 추출
       const extracted = await geminiService.extractBuildingInfo(item.description + " " + item.title);
       
       if (extracted && extracted.주소) {
-        // 2. 마스터 DB와 매칭
+        // 2. [고도화] 네이버 지도를 통한 상세 데이터 수집
+        const detailHtml = await naverService.scrapeFullContent(extracted.주소);
+        
+        // 3. Gemini로 입점 현황 및 건물 상세 정보 파싱
+        const deepInfo = await geminiService.analyzeDeepBuildingInfo(detailHtml, extracted);
+        
+        // 4. 마스터 DB와 매칭
         const matchResult = findBestMatch(extracted, masterBuildings);
         
         if (matchResult) {
+          // 5. 입점 현황 기반 매칭률 보정
+          let finalMatchRate = matchResult.matchRate;
+          if (deepInfo.isFloorVacancy || deepInfo.industryMatch) {
+            finalMatchRate = Math.min(100, finalMatchRate + 20); // 신뢰도 가산
+          }
+
           const finalData = {
             ...matchResult,
+            matchRate: finalMatchRate,
             summary: extracted.요약,
             link: item.link,
-            rawExtracted: extracted
+            tenantInfo: deepInfo.tenantList,
+            analysisReport: deepInfo.analysisReport,
+            rawExtracted: { ...extracted, ...deepInfo.specs }
           };
 
-          setMatches(prev => [finalData, ...prev].slice(0, 50)); // 최근 50개 유지
+          setMatches(prev => [finalData, ...prev].slice(0, 50));
 
-          // 3. 90% 이상인 경우 처리
-          if (matchResult.matchRate >= 90) {
-            // Airtable 저장
+          const isFilterMatch = 
+            (!filters.dong || finalData.주소.includes(filters.dong)) &&
+            (finalData.가격 >= filters.minPrice && finalData.가격 <= filters.maxPrice) &&
+            (finalData.전용면적 >= filters.minArea);
+
+          if (finalMatchRate >= 90 && isFilterMatch) {
             await airtableService.saveMatchResult(finalData);
-            
-            // 솔라피 알림 발송
             await solapiService.sendAlimtalk({
-              matchRate: matchResult.matchRate,
-              address: matchResult.주소,
-              price: matchResult.가격
+              matchRate: finalMatchRate,
+              address: finalData.주소,
+              price: finalData.가격
             });
           }
         }
       }
-      
-      // API 할당량 및 과부하 방지를 위한 딜레이
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 2000));
     }
 
     setIsScanning(false);
-  }, [isScanning, masterBuildings]);
+  }, [isScanning, masterBuildings, filters]);
 
-  // 주기적 스캔 실행 (예: 5분마다)
+  // 주기적 스캔 실행
   useEffect(() => {
     const interval = setInterval(() => {
       runScanningProcess();
     }, 300000); 
 
-    // 즉시 실행 버튼 등을 위해 최초 1회는 수동 실행 가능하게 두거나 
-    // 여기서는 마스터 데이터 로드 후 1회 실행
     if (masterBuildings.length > 0 && matches.length === 0) {
       runScanningProcess();
     }
@@ -93,22 +117,23 @@ function App() {
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh' }}>
       <Sidebar 
-        matches={matches} 
+        matches={filteredMatches} 
+        filters={filters}
+        setFilters={setFilters}
         onSelectMatch={setSelectedMatch} 
         isScanning={isScanning} 
       />
       
       <div style={{ flex: 1, position: 'relative' }}>
-        <KakaoMap 
-          matches={matches} 
+        <NaverMap 
+          matches={filteredMatches} 
           selectedMatch={selectedMatch} 
         />
         
-        {/* 컨트롤 패널 (수동 스캔 버튼 등) */}
         <div style={{ 
           position: 'absolute', 
           top: '20px', 
-          right: '20px', 
+          right: '120px', 
           zIndex: 5,
           display: 'flex',
           gap: '10px'
