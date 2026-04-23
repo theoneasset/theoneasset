@@ -52,30 +52,15 @@ function App() {
       const extracted = await geminiService.extractBuildingInfo(item.description + " " + item.title);
       
       if (extracted && extracted.주소) {
-        // 2. [고도화] 네이버 지도를 통한 상세 데이터 수집
-        const detailHtml = await naverService.scrapeFullContent(extracted.주소);
-        
-        // 3. Gemini로 입점 현황 및 건물 상세 정보 파싱
-        const deepInfo = await geminiService.analyzeDeepBuildingInfo(detailHtml, extracted);
-        
-        // 4. 마스터 DB와 매칭
+        // 2. 마스터 DB와 매칭 (기본 매칭)
         const matchResult = findBestMatch(extracted, masterBuildings);
         
         if (matchResult) {
-          // 5. 입점 현황 기반 매칭률 보정
-          let finalMatchRate = matchResult.matchRate;
-          if (deepInfo.isFloorVacancy || deepInfo.industryMatch) {
-            finalMatchRate = Math.min(100, finalMatchRate + 20); // 신뢰도 가산
-          }
-
           const finalData = {
             ...matchResult,
-            matchRate: finalMatchRate,
             summary: extracted.요약,
             link: item.link,
-            tenantInfo: deepInfo.tenantList,
-            analysisReport: deepInfo.analysisReport,
-            rawExtracted: { ...extracted, ...deepInfo.specs }
+            rawExtracted: extracted
           };
 
           setMatches(prev => [finalData, ...prev].slice(0, 50));
@@ -85,17 +70,17 @@ function App() {
             (finalData.가격 >= filters.minPrice && finalData.가격 <= filters.maxPrice) &&
             (finalData.전용면적 >= filters.minArea);
 
-          if (finalMatchRate >= 90 && isFilterMatch) {
+          if (matchResult.matchRate >= 90 && isFilterMatch) {
             await airtableService.saveMatchResult(finalData);
             await solapiService.sendAlimtalk({
-              matchRate: finalMatchRate,
+              matchRate: matchResult.matchRate,
               address: finalData.주소,
               price: finalData.가격
             });
           }
         }
       }
-      await new Promise(resolve => setTimeout(resolve, 3000 + Math.random() * 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
     }
 
     setIsScanning(false);

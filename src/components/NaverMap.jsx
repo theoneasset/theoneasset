@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import PriceChart from './PriceChart';
 import { Layers } from 'lucide-react';
+import BuildingDetailView from './BuildingDetailView';
 
 const NaverMap = ({ matches, selectedMatch }) => {
   const mapRef = useRef(null);
@@ -93,38 +93,7 @@ const NaverMap = ({ matches, selectedMatch }) => {
           
           infoWindowRoot.current = createRoot(contentContainer);
           infoWindowRoot.current.render(
-            <div className="infowindow-inner">
-              <div className="infowindow-header">
-                <span className="rate-badge">{match.matchRate}% Match</span>
-                <h3>{match.건물명}</h3>
-              </div>
-              <div className="infowindow-body">
-                <p className="address">{match.주소}</p>
-                <div className="building-specs">
-                  <span>🏢 {match.rawExtracted?.연면적 || '정보 없음'}</span>
-                  <span>🚗 {match.rawExtracted?.주차 || '정보 없음'}</span>
-                  <span>🛗 {match.rawExtracted?.승강기 || '정보 없음'}</span>
-                </div>
-                
-                <div className="tenant-status">
-                  <h4>층별 입점 현황</h4>
-                  <ul className="tenant-list">
-                    {match.tenantInfo?.map((t, i) => (
-                      <li key={i}><strong>{t.floor}:</strong> {t.name} ({t.type})</li>
-                    )) || <li>수집된 현황 없음</li>}
-                  </ul>
-                </div>
-
-                <div className="analysis-report">
-                  <h4>Gemini 분석 리포트</h4>
-                  <p>{match.analysisReport || "데이터 분석 중..."}</p>
-                </div>
-
-                <PriceChart address={match.주소} />
-                
-                <a href={match.link} target="_blank" rel="noopener noreferrer" className="btn-link">상세 보기</a>
-              </div>
-            </div>
+            <BuildingDetailView match={match} />
           );
         });
 

@@ -49,5 +49,49 @@ export const airtableService = {
       console.error('Airtable History Error:', error);
       return [];
     }
+  },
+
+  // 건물 상세 정보 캐싱 조회
+  async getBuildingCache(address) {
+    try {
+      const records = await base('BUILDING_CACHE').select({
+        filterByFormula: `{주소} = '${address}'`,
+        maxRecords: 1
+      }).firstPage();
+
+      if (records.length > 0) {
+        const data = records[0].fields;
+        const lastUpdated = new Date(data.수집일자);
+        const now = new Date();
+        const diffDays = Math.ceil(Math.abs(now - lastUpdated) / (1000 * 60 * 60 * 24));
+        
+        // 7일 이내 데이터만 유효
+        if (diffDays <= 7) {
+          return JSON.parse(data.상세데이터);
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Cache Retrieval Error:', error);
+      return null;
+    }
+  },
+
+  // 건물 상세 정보 캐싱 저장
+  async saveBuildingCache(address, detailData) {
+    try {
+      // 기존 캐시 삭제 로직 (선택 사항: 업데이트 대신 새로 생성)
+      await base('BUILDING_CACHE').create([
+        {
+          fields: {
+            '주소': address,
+            '상세데이터': JSON.stringify(detailData),
+            '수집일자': new Date().toISOString()
+          }
+        }
+      ]);
+    } catch (error) {
+      console.error('Cache Save Error:', error);
+    }
   }
 };
