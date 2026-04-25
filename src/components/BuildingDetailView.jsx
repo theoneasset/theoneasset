@@ -126,15 +126,15 @@ const BuildingDetailView = ({ match }) => {
             <div className="tenant-status">
               <h4>층별 입점 현황</h4>
               <ul className="tenant-list">
-                {detailData?.tenantList?.map((t, i) => (
+                {(detailData?.tenantList && Array.isArray(detailData.tenantList)) ? detailData.tenantList.map((t, i) => (
                   <li key={i}><strong>{t?.floor || '층 미상'}:</strong> {t?.name || '정보 없음'} ({t?.type || '입점사'})</li>
-                )) || <li>수집된 현황 없음</li>}
+                )) : <li>수집된 현황 없음</li>}
               </ul>
             </div>
 
             <div className="analysis-report">
               <h4>Gemini 분석 리포트</h4>
-              <p>{detailData?.analysisReport || "매칭 데이터 분석 중..."}</p>
+              <p>{detailData?.analysisReport || match?.summary || "매칭 데이터 분석 중..."}</p>
             </div>
 
             <PriceChart address={match?.주소 || ''} />

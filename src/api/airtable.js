@@ -1,11 +1,24 @@
 import Airtable from 'airtable';
 
-const airtableKey = import.meta.env.VITE_AIRTABLE_API_KEY || '';
-const apiKey = airtableKey.trim();
+// [1] 환경 변수 참조 방식 통일 (Vite 전용)
+const API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
+const BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
 
-const base = new Airtable({ apiKey }).base(
-  import.meta.env.VITE_AIRTABLE_BASE_ID
-);
+// [2] 폴백 제거 및 로드 실패 가드
+if (!API_KEY || !BASE_ID) {
+  console.error("❌ [Airtable] 환경변수 로드 실패: VITE_AIRTABLE_API_KEY 또는 BASE_ID가 없습니다.");
+  // 앱 전체에서 에러를 인지할 수 있도록 에러를 던집니다.
+  // throw new Error("에어테이블 환경변수 로드 실패"); 
+} else {
+  console.log("✅ [Airtable] Connection Successful: 환경변수 로드 완료");
+}
+
+// [3] 초기화 로직 점검 (Airtable.configure 사용)
+Airtable.configure({
+  apiKey: API_KEY
+});
+
+const base = Airtable.base(BASE_ID);
 
 // [중요] 테이블 역할 분리
 const MASTER_TABLE = '부동산 매물 관리';    // 건축물대장 마스터 데이터
@@ -15,9 +28,14 @@ export const airtableService = {
   // 마스터(건축물대장) 정보 로드
   async getMasterBuildings() {
     try {
+      if (!API_KEY) throw new Error("Airtable API Key is missing");
+      
       const records = await base(MASTER_TABLE).select({
         view: 'Grid view' 
       }).all();
+      
+      console.log(`[Airtable] Successfully loaded ${records.length} master buildings.`);
+      
       return records.map(record => ({
         id: record.id,
         주소: record.fields['지번주소'], 
@@ -44,7 +62,7 @@ export const airtableService = {
             '원문링크': data.link || '',
             '상태': '새롭게',
             '수정일': new Date().toISOString().split('T')[0],
-            '지역': data.주소?.split(' ')?.[2] || '' // '역삼동' 등 자동 추출
+            '지역': data.주소?.split(' ')?.[2] || '' 
           }
         }
       ]);
@@ -119,7 +137,7 @@ export const airtableService = {
     }
   },
 
-  // 건물 마스터 DB 동기화 (마스터 테이블에 직접 기록)
+  // 건물 마스터 DB 동기화
   async syncBuildingToMaster(address, specs) {
     try {
       const existing = await base(MASTER_TABLE).select({

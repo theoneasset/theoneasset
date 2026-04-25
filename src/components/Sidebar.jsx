@@ -156,13 +156,13 @@ const Sidebar = ({ matches, filters, setFilters, onSelectMatch, isScanning, onIn
                     </div>
                     <div className="address">
                       <MapPin size={12} className="icon" />
-                      {match.주소}
+                      {match?.주소 || '주소 정보 없음'}
                     </div>
                     <div className="details">
-                      <span className="price-bold">보 {(match.보증금 || match.가격)?.toLocaleString()}원</span>
-                      <span className="rent-bold">/ 월 {(match.월세 || 0).toLocaleString()}원</span>
+                      <span className="price-bold">보 {((match?.보증금 || match?.가격) || 0).toLocaleString()}원</span>
+                      <span className="rent-bold">/ 월 {(match?.월세 || 0).toLocaleString()}원</span>
                       <span className="divider">|</span>
-                      <span>{match.전용면적}m²</span>
+                      <span>{match?.전용면적 || '0'}m²</span>
                     </div>
                   </div>
                 ))}

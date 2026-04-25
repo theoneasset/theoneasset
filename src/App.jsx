@@ -16,6 +16,26 @@ import './index.css';
 function App() {
   const [activeTab, setActiveTab] = useState('map'); // 'map' or 'admin'
   const [matches, setMatches] = useState([]);
+  
+  // [DEBUG] Airtable 환경 변수 가드
+  const AIRTABLE_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
+  const AIRTABLE_BASE = import.meta.env.VITE_AIRTABLE_BASE_ID;
+
+  if (!AIRTABLE_KEY || !AIRTABLE_BASE) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0b1120', color: 'white', textAlign: 'center', padding: '20px' }}>
+        <AlertTriangle size={64} color="#ef4444" style={{ marginBottom: '24px' }} />
+        <h1 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '16px', color: '#ef4444' }}>
+          에어테이블 환경 변수 미설정 (Check Vercel Settings)
+        </h1>
+        <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
+          VITE_AIRTABLE_API_KEY 또는 VITE_AIRTABLE_BASE_ID가 확인되지 않습니다.<br/>
+          Vercel 대시보드의 Environment Variables 설정을 확인해 주세요.
+        </p>
+      </div>
+    );
+  }
+
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [masterBuildings, setMasterBuildings] = useState([]);
@@ -123,22 +143,25 @@ function App() {
       if (extracted && extracted.주소) {
         const matchResult = findBestMatch(extracted, masterBuildings);
         if (matchResult) {
+          // [Data Integrity Guard] 모든 필드에 대해 널 체크 및 기본값 처리
           const finalData = {
             ...matchResult,
-            summary: extracted.요약,
-            link: item.link,
-            rawExtracted: extracted,
-            isExclusive: matchResult.matchRate >= 95,
-            analysisReport: extracted.요약
+            주소: matchResult.주소 || extracted.주소 || '주소 정보 없음',
+            건물명: matchResult.건물명 || extracted.건물명 || '건물명 미상',
+            summary: extracted.요약 || '분석 내용 없음',
+            link: item.link || '#',
+            rawExtracted: extracted || {},
+            isExclusive: (matchResult.matchRate || 0) >= 95,
+            analysisReport: extracted.요약 || '분석 리포트 생성 중...'
           };
 
           setMatches(prev => {
             const newMatches = [finalData, ...prev].slice(0, 50);
-            if (matchResult.matchRate >= 90) triggerToast(finalData);
+            if ((matchResult.matchRate || 0) >= 90) triggerToast(finalData);
             return newMatches;
           });
 
-          if (matchResult.matchRate >= 90) {
+          if ((matchResult.matchRate || 0) >= 90) {
             await airtableService.saveMatchResult(finalData);
           }
         }
