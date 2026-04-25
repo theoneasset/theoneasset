@@ -1,4 +1,6 @@
-# Intelligence Tracker (vercel.json Removed)
+# Intelligence Tracker (VITE_MY_ Env Prefix Applied)
+
+Environment variables in this project now follow the `VITE_MY_` prefix convention to ensure consistency and avoid conflicts with Vercel's default variables.
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
