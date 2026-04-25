@@ -6,11 +6,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { message, type = 'ATA' } = req.body; // ATA is Alimtalk
+  const { message, type = 'ATA', isCard = false, items = [] } = req.body; 
 
   const apiKey = process.env.SOLAPI_API_KEY;
   const apiSecret = process.env.SOLAPI_API_SECRET;
-  const pfId = process.env.SOLAPI_PFID;
+  const pfId = process.env.VITE_SOLAPI_PFID;
   const senderPhone = process.env.SENDER_PHONE;
   const receiverPhone = process.env.RECEIVER_PHONE;
 
@@ -27,20 +27,40 @@ export default async function handler(req, res) {
 
   const authorization = `HMAC-SHA256 apiKey=${apiKey}, date=${date}, salt=${salt}, signature=${signature}`;
 
+  // 메시지 구성 (카드형일 경우와 아닐 경우 구분)
+  const messageObj = {
+    to: receiverPhone,
+    from: senderPhone,
+    type: type,
+    kakaoOptions: {
+      pfId: pfId
+    }
+  };
+
+  if (isCard && items.length > 0) {
+    // 카드형 친구톡 구성
+    messageObj.text = '대표님을 위한 추천 매물 리스트입니다.';
+    messageObj.kakaoOptions.carousel = {
+      type: 'ITEM_LIST',
+      items: items.map(item => ({
+        header: item.title,
+        message: item.description,
+        buttonList: [{
+          link: { mobile: item.link, pc: item.link },
+          name: '매물 상세보기',
+          type: 'WL' // Web Link
+        }]
+      }))
+    };
+  } else {
+    messageObj.text = message;
+  }
+
   try {
     const response = await axios.post(
       'https://api.solapi.com/messages/v4/send',
       {
-        message: {
-          to: receiverPhone,
-          from: senderPhone,
-          text: message,
-          type: type,
-          kakaoOptions: {
-            pfId: pfId,
-            // templateId: 'notice_template', // 알림톡 사용 시 필요
-          },
-        },
+        message: messageObj
       },
       {
         headers: {

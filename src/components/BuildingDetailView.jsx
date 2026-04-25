@@ -79,23 +79,44 @@ const BuildingDetailView = ({ match }) => {
     <div className="infowindow-inner">
       <div className="infowindow-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-          <span className="rate-badge">{match.matchRate}% Match</span>
+          <span className="rate-badge">{match?.matchRate || 0}% Match</span>
           {errorStatus === 'parsing_failed' && (
             <span style={{ fontSize: '0.65rem', color: '#f87171', background: 'rgba(248, 113, 113, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
               ⚠️ 실시간 데이터 로딩 지연 (캐시됨)
             </span>
           )}
         </div>
-        <h3>{match.건물명}</h3>
+        <h3>{match?.건물명 || '건물명 미상'}</h3>
       </div>
       <div className="infowindow-body">
         {!detailData && !loading ? (
-          <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            데이터를 불러올 수 없습니다. 다시 시도해주세요.
+          <div className="demo-content">
+            <p className="address">{match?.주소 || '주소 정보 없음'}</p>
+            <div className="building-specs">
+              <span>🏢 연면적 3,450m²</span>
+              <span>🚗 주차 45대</span>
+              <span>🛗 승강기 2대</span>
+            </div>
+            
+            <div className="tenant-status">
+              <h4>층별 입점 현황 (샘플)</h4>
+              <ul className="tenant-list">
+                <li><strong>1F:</strong> 스타벅스 (카페/음식점)</li>
+                <li><strong>2F:</strong> 더원에셋 의원 (병원)</li>
+                <li><strong>3F:</strong> 공실 (입점 가능)</li>
+              </ul>
+            </div>
+
+            <div className="analysis-report">
+              <h4>Gemini 분석 리포트 (샘플)</h4>
+              <p>해당 매물은 대로변 코너에 위치하여 가시성이 매우 뛰어납니다. 3층 공실은 현재 주변 시세 대비 10% 저렴하게 나와 있어 병원 또는 학원 업종을 강력 추천합니다.</p>
+            </div>
+
+            <PriceChart address={match?.주소 || ''} />
           </div>
         ) : (
           <>
-            <p className="address">{match.주소}</p>
+            <p className="address">{match?.주소 || '주소 정보 없음'}</p>
             <div className="building-specs">
               <span>🏢 {detailData?.specs?.연면적 || '정보 없음'}</span>
               <span>🚗 {detailData?.specs?.주차 || '정보 없음'}</span>
@@ -106,7 +127,7 @@ const BuildingDetailView = ({ match }) => {
               <h4>층별 입점 현황</h4>
               <ul className="tenant-list">
                 {detailData?.tenantList?.map((t, i) => (
-                  <li key={i}><strong>{t.floor}:</strong> {t.name} ({t.type})</li>
+                  <li key={i}><strong>{t?.floor || '층 미상'}:</strong> {t?.name || '정보 없음'} ({t?.type || '입점사'})</li>
                 )) || <li>수집된 현황 없음</li>}
               </ul>
             </div>
@@ -116,11 +137,11 @@ const BuildingDetailView = ({ match }) => {
               <p>{detailData?.analysisReport || "매칭 데이터 분석 중..."}</p>
             </div>
 
-            <PriceChart address={match.주소} />
+            <PriceChart address={match?.주소 || ''} />
           </>
         )}
         
-        <a href={match.link} target="_blank" rel="noopener noreferrer" className="btn-link">상세 보기</a>
+        <a href={match?.link || '#'} target="_blank" rel="noopener noreferrer" className="btn-link">상세 보기</a>
       </div>
     </div>
   );

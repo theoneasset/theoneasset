@@ -4,11 +4,11 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 export const geminiService = {
   async extractBuildingInfo(text) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       다음은 부동산 매물 관련 텍스트입니다. 여기서 정보를 추출해서 JSON 형식으로 응답해주세요.
-      필수 항목: { "주소": "지번 주소 포함 정확한 주소", "건물명": "건물 이름", "전용면적": "숫자만(m2)", "층수": "숫자만", "가격": "숫자만(만원)", "요약": "매물 특징 요약(한 줄)" }
+      필수 항목: { "주소": "지번 주소 포함 정확한 주소", "건물명": "건물 이름", "전용면적": "숫자만(m2)", "층수": "숫자만", "가격": "숫자만(원)", "요약": "매물 특징 요약(한 줄)" }
       만약 정보가 없으면 null로 표시하세요.
       
       텍스트:
@@ -27,7 +27,7 @@ export const geminiService = {
   },
 
   async analyzeDeepBuildingInfo(html, extractedData) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       다음은 네이버 지도에서 수집한 건물의 상세 페이지 HTML 데이터(일부)와 우리가 추출한 매물 정보입니다.

@@ -3,7 +3,8 @@ import axios from 'axios';
 export const naverService = {
   async searchBlogs(query) {
     try {
-      const response = await axios.get('/naver-api/v1/search/blog.json', {
+      // 헤더는 vite.config.js(로컬) 및 프록시 설정이 처리하므로 여기서는 경로만 지정합니다.
+      const response = await axios.get(`/naver-api/v1/search/blog.json`, {
         params: {
           query: query,
           display: 10,

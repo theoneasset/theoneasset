@@ -7,48 +7,61 @@ const base = new Airtable({ apiKey }).base(
   import.meta.env.VITE_AIRTABLE_BASE_ID
 );
 
+// [중요] 테이블 역할 분리
+const MASTER_TABLE = '부동산 매물 관리';    // 건축물대장 마스터 데이터
+const LISTING_TABLE = '온라인매물_수집';   // 수집된 매물 결과 저장
+
 export const airtableService = {
+  // 마스터(건축물대장) 정보 로드
   async getMasterBuildings() {
     try {
-      // 사용자가 지정한 테이블 ID (강남구 매물_DB 등) 사용
-      const tableId = import.meta.env.VITE_AIRTABLE_TABLE_ID || 'BUILDINGS';
-      const records = await base(tableId).select({
-        view: 'Grid view'
+      const records = await base(MASTER_TABLE).select({
+        view: 'Grid view' 
       }).all();
       return records.map(record => ({
         id: record.id,
+        주소: record.fields['지번주소'], 
+        도로명주소: record.fields['도로명주소'],
+        건물명: record.fields['건물명'] || '',
+        연면적: record.fields['연면적(㎡)'] || 0,
         ...record.fields
       }));
     } catch (error) {
-      console.error('Airtable Error:', error);
+      console.error('Airtable Master Load Error:', error);
       return [];
     }
   },
 
+  // 매칭 결과를 수집 테이블에 저장
   async saveMatchResult(data) {
     try {
-      return await base('MATCH_RESULTS').create([
+      return await base(LISTING_TABLE).create([
         {
           fields: {
-            ...data,
-            '수집일자': new Date().toISOString().split('T')[0]
+            '주소': data.주소,
+            'AI점수': data.matchRate || 0,
+            'AI분석': data.summary || '',
+            '원문링크': data.link || '',
+            '상태': '새롭게',
+            '수정일': new Date().toISOString().split('T')[0],
+            '지역': data.주소?.split(' ')?.[2] || '' // '역삼동' 등 자동 추출
           }
         }
       ]);
     } catch (error) {
-      console.error('Airtable Save Error:', error);
+      console.error('Airtable Listing Save Error:', error);
     }
   },
 
   async getPriceHistory(address) {
     try {
-      const records = await base('PRICE_HISTORY').select({
+      const records = await base(LISTING_TABLE).select({
         filterByFormula: `{주소} = '${address}'`,
-        sort: [{ field: '날짜', direction: 'asc' }]
+        sort: [{ field: '수정일', direction: 'asc' }]
       }).all();
       return records.map(record => ({
-        date: record.fields.날짜,
-        price: record.fields.가격
+        date: record.fields['수정일'],
+        price: record.fields['임대'] || 0
       }));
     } catch (error) {
       console.error('Airtable History Error:', error);
@@ -56,23 +69,28 @@ export const airtableService = {
     }
   },
 
-  // 건물 상세 정보 캐싱 조회 (Safe-Fall 지원)
+  // 건물 상세 정보 캐싱 조회
   async getBuildingCache(address, ignoreExpiration = false) {
     try {
-      const records = await base('BUILDING_CACHE').select({
+      const records = await base(LISTING_TABLE).select({
         filterByFormula: `{주소} = '${address}'`,
         maxRecords: 1
       }).firstPage();
 
       if (records.length > 0) {
         const data = records[0].fields;
-        const lastUpdated = new Date(data.수집일자);
+        if (!data['AI분석']) return null; 
+
+        const lastUpdated = new Date(data['수정일'] || new Date());
         const now = new Date();
         const diffDays = Math.ceil(Math.abs(now - lastUpdated) / (1000 * 60 * 60 * 24));
         
-        // ignoreExpiration이 true면 날짜 상관없이 반환 (파싱 실패 시 백업용)
         if (ignoreExpiration || diffDays <= 7) {
-          return JSON.parse(data.상세데이터);
+          try {
+            return JSON.parse(data['상세데이터'] || '{}');
+          } catch(e) {
+            return { analysisReport: data['AI분석'] };
+          }
         }
       }
       return null;
@@ -85,12 +103,14 @@ export const airtableService = {
   // 건물 상세 정보 캐싱 저장
   async saveBuildingCache(address, detailData) {
     try {
-      await base('BUILDING_CACHE').create([
+      await base(LISTING_TABLE).create([
         {
           fields: {
             '주소': address,
             '상세데이터': JSON.stringify(detailData),
-            '수집일자': new Date().toISOString()
+            'AI분석': detailData.analysisReport || '',
+            '수정일': new Date().toISOString().split('T')[0],
+            '상태': '분석완료'
           }
         }
       ]);
@@ -99,11 +119,11 @@ export const airtableService = {
     }
   },
 
-  // 건물 마스터 DB 동기화 (중복 방지)
+  // 건물 마스터 DB 동기화 (마스터 테이블에 직접 기록)
   async syncBuildingToMaster(address, specs) {
     try {
-      const existing = await base('BUILDINGS').select({
-        filterByFormula: `{주소} = '${address}'`,
+      const existing = await base(MASTER_TABLE).select({
+        filterByFormula: `OR({지번주소} = '${address}', {도로명주소} = '${address}')`,
         maxRecords: 1
       }).firstPage();
 
@@ -111,21 +131,18 @@ export const airtableService = {
         return existing[0].id;
       }
 
-      const record = await base('BUILDINGS').create([
+      const record = await base(MASTER_TABLE).create([
         {
           fields: {
-            '주소': address,
+            '지번주소': address,
             '건물명': specs.건물명 || '',
-            '연면적': specs.연면적 || '',
-            '주차': specs.주차 || '',
-            '승강기': specs.승강기 || '',
-            '등록일자': new Date().toISOString().split('T')[0]
+            '연면적(㎡)': specs.연면적 || 0
           }
         }
       ]);
       return record[0].id;
     } catch (error) {
-      console.error('Airtable Sync Error:', error);
+      console.error('Airtable Master Sync Error:', error);
     }
   }
 };

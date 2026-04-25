@@ -8,10 +8,16 @@ export const calculateMatchingRate = (source, master) => {
     가격: 5
   };
 
-  // 주소 매칭 (부분 일치 포함)
-  if (source.주소 && master.주소) {
-    if (source.주소 === master.주소) score += weights.주소;
-    else if (master.주소.includes(source.주소) || source.주소.includes(master.주소)) score += weights.주소 * 0.7;
+  // 주소 매칭 (지번주소 및 도로명주소 동시 비교)
+  if (source.주소) {
+    const isLotMatch = master.주소 && (source.주소 === master.주소 || master.주소.includes(source.주소) || source.주소.includes(master.주소));
+    const isRoadMatch = master.도로명주소 && (source.주소 === master.도로명주소 || master.도로명주소.includes(source.주소) || source.주소.includes(master.도로명주소));
+    
+    if (source.주소 === master.주소 || source.주소 === master.도로명주소) {
+      score += weights.주소;
+    } else if (isLotMatch || isRoadMatch) {
+      score += weights.주소 * 0.8; // 부분 일치 시 가중치 적용
+    }
   }
 
   // 건물명 매칭
