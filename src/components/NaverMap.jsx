@@ -11,7 +11,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [status, setStatus] = useState('loading'); 
   const [isAuthFailed, setIsAuthFailed] = useState(false);
 
-  const CLIENT_ID = "1hbpt7fb00"; // [임시 하드코딩] 환경변수 주입 문제 진단용
+  const CLIENT_ID = "1hbpt7fb00";
 
   // [1] 지도 초기화 로직 (철저한 중복 방지)
   useEffect(() => {
@@ -52,13 +52,11 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           console.log('✅ [V3-MAP-READY] Map Instance Created Successfully');
         });
 
-/* [DEBUG] 인증 실패 UI 강제 비활성화
         window.naver.maps.Event.addListener(mapInstance, 'auth_failed', () => {
           if (!isMounted) return;
           setIsAuthFailed(true);
           setStatus('auth_failed');
         });
-*/
 
       } catch (err) {
         console.error('❌ [Map Init Error]', err);
