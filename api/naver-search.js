@@ -28,8 +28,8 @@ export default async function handler(req, res) {
       params: req.query,
       data: req.body,
       headers: {
-        'X-Naver-Client-Id': process.env.VITE_NAVER_SEARCH_CLIENT_ID,
-        'X-Naver-Client-Secret': process.env.VITE_NAVER_SEARCH_CLIENT_SECRET,
+        'X-Naver-Client-Id': process.env.VITE_MY_NAVER_SEARCH_CLIENT_ID,
+        'X-Naver-Client-Secret': process.env.VITE_MY_NAVER_SEARCH_CLIENT_SECRET,
       },
     });
 

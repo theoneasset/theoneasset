@@ -8,11 +8,11 @@ export default async function handler(req, res) {
 
   const { message, type = 'ATA', isCard = false, items = [] } = req.body; 
 
-  const apiKey = process.env.SOLAPI_API_KEY;
-  const apiSecret = process.env.SOLAPI_API_SECRET;
-  const pfId = process.env.VITE_SOLAPI_PFID;
-  const senderPhone = process.env.SENDER_PHONE;
-  const receiverPhone = process.env.RECEIVER_PHONE;
+  const apiKey = process.env.MY_SOLAPI_API_KEY;
+  const apiSecret = process.env.MY_SOLAPI_API_SECRET;
+  const pfId = process.env.VITE_MY_SOLAPI_PFID;
+  const senderPhone = process.env.MY_SENDER_PHONE;
+  const receiverPhone = process.env.MY_RECEIVER_PHONE;
 
   if (!apiKey || !apiSecret) {
     return res.status(500).json({ message: 'API Configuration missing' });

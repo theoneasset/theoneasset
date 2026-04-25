@@ -105,7 +105,7 @@ const VWorldMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
       if (match.matchRate < 90) return;
 
       // [Security] 환경 변수에서 키를 읽어오도록 수정 (하드코딩 제거)
-      const apiKey = import.meta.env.VITE_VWORLD_KEY;
+      const apiKey = import.meta.env.VITE_MY_VWORLD_KEY;
       if (!apiKey) return;
 
       const geocodeUrl = `https://api.vworld.kr/req/address?service=address&request=getcoord&version=2.0&crs=epsg:3857&address=${encodeURIComponent(match.주소)}&refine=true&simple=false&format=json&type=parcel&key=${apiKey}`;

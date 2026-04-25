@@ -38,7 +38,7 @@ const HybridMap = ({ matches, selectedMatch, isScanning, onStartScan, filters })
     }).addTo(leafletMap.current);
 
     // 브이월드 WMS (지적도) - 환경 변수 사용
-    const apiKey = import.meta.env.VITE_VWORLD_KEY;
+        const apiKey = import.meta.env.VITE_MY_VWORLD_KEY;
     if (apiKey) {
       vworldWmsLayer.current = window.L.tileLayer.wms('https://api.vworld.kr/req/wms', {
         layers: 'LP_PA_CBND_BUBUN,LT_C_UQ111,LT_C_UQ112',

@@ -1,8 +1,8 @@
 import Airtable from 'airtable';
 
 // [1] 환경 변수 참조 방식 통일 (Vite 전용)
-const API_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
-const BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
+const API_KEY = import.meta.env.VITE_MY_AIRTABLE_API_KEY;
+const BASE_ID = import.meta.env.VITE_MY_AIRTABLE_BASE_ID;
 
 // [2] 폴백 제거 및 로드 실패 가드
 if (!API_KEY || !BASE_ID) {

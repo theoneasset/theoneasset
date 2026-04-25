@@ -11,6 +11,7 @@ import { findBestMatch } from './api/matchingEngine';
 import { solapiService } from './api/solapi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Map as MapIcon, LayoutDashboard } from 'lucide-react';
+import { Map as MapIcon, LayoutDashboard, AlertTriangle } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -18,8 +19,8 @@ function App() {
   const [matches, setMatches] = useState([]);
   
   // [DEBUG] Airtable 환경 변수 가드
-  const AIRTABLE_KEY = import.meta.env.VITE_AIRTABLE_API_KEY;
-  const AIRTABLE_BASE = import.meta.env.VITE_AIRTABLE_BASE_ID;
+  const AIRTABLE_KEY = import.meta.env.VITE_MY_AIRTABLE_API_KEY;
+  const AIRTABLE_BASE = import.meta.env.VITE_MY_AIRTABLE_BASE_ID;
 
   if (!AIRTABLE_KEY || !AIRTABLE_BASE) {
     return (

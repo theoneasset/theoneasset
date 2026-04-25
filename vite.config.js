@@ -13,8 +13,8 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/naver-api/, ''),
           headers: {
-            'X-Naver-Client-Id': env.VITE_NAVER_SEARCH_CLIENT_ID,
-            'X-Naver-Client-Secret': env.VITE_NAVER_SEARCH_CLIENT_SECRET,
+            'X-Naver-Client-Id': env.VITE_MY_NAVER_SEARCH_CLIENT_ID,
+            'X-Naver-Client-Secret': env.VITE_MY_NAVER_SEARCH_CLIENT_SECRET,
           },
         },
       },

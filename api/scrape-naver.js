@@ -6,8 +6,8 @@ export default async function handler(req, res) {
   }
 
   const { url } = req.body;
-  const browserlessKey = process.env.BROWSERLESS_API_KEY;
-  const proxyUrl = process.env.PROXY_URL;
+  const browserlessKey = process.env.MY_BROWSERLESS_API_KEY;
+  const proxyUrl = process.env.MY_PROXY_URL;
 
   if (!url) {
     return res.status(400).json({ message: 'URL is required' });
