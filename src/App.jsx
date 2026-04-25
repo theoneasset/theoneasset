@@ -146,13 +146,13 @@ function App() {
           // [Data Integrity Guard] 모든 필드에 대해 널 체크 및 기본값 처리
           const finalData = {
             ...matchResult,
-            주소: matchResult.주소 || extracted.주소 || '주소 정보 없음',
-            건물명: matchResult.건물명 || extracted.건물명 || '건물명 미상',
-            summary: extracted.요약 || '분석 내용 없음',
-            link: item.link || '#',
+            주소: matchResult.주소 || extracted.주소,
+            건물명: matchResult.건물명 || extracted.건물명,
+            summary: extracted.요약,
+            link: item.link,
             rawExtracted: extracted || {},
             isExclusive: (matchResult.matchRate || 0) >= 95,
-            analysisReport: extracted.요약 || '분석 리포트 생성 중...'
+            analysisReport: extracted.요약
           };
 
           setMatches(prev => {

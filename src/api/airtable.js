@@ -6,7 +6,7 @@ const BASE_ID = import.meta.env.VITE_AIRTABLE_BASE_ID;
 
 // [2] 폴백 제거 및 로드 실패 가드
 if (!API_KEY || !BASE_ID) {
-  console.error("❌ [Airtable] 환경변수 로드 실패: VITE_AIRTABLE_API_KEY 또는 BASE_ID가 없습니다.");
+  console.error("❌ [Airtable] 환경변수 로드 실패");
   // 앱 전체에서 에러를 인지할 수 있도록 에러를 던집니다.
   // throw new Error("에어테이블 환경변수 로드 실패"); 
 } else {
@@ -40,8 +40,8 @@ export const airtableService = {
         id: record.id,
         주소: record.fields['지번주소'], 
         도로명주소: record.fields['도로명주소'],
-        건물명: record.fields['건물명'] || '',
-        연면적: record.fields['연면적(㎡)'] || 0,
+        건물명: record.fields['건물명'],
+        연면적: record.fields['연면적(㎡)'],
         ...record.fields
       }));
     } catch (error) {
@@ -57,9 +57,9 @@ export const airtableService = {
         {
           fields: {
             '주소': data.주소,
-            'AI점수': data.matchRate || 0,
-            'AI분석': data.summary || '',
-            '원문링크': data.link || '',
+            'AI점수': data.matchRate,
+            'AI분석': data.summary,
+            '원문링크': data.link,
             '상태': '새롭게',
             '수정일': new Date().toISOString().split('T')[0],
             '지역': data.주소?.split(' ')?.[2] || '' 
@@ -126,7 +126,7 @@ export const airtableService = {
           fields: {
             '주소': address,
             '상세데이터': JSON.stringify(detailData),
-            'AI분석': detailData.analysisReport || '',
+            'AI분석': detailData.analysisReport,
             '수정일': new Date().toISOString().split('T')[0],
             '상태': '분석완료'
           }
@@ -153,8 +153,8 @@ export const airtableService = {
         {
           fields: {
             '지번주소': address,
-            '건물명': specs.건물명 || '',
-            '연면적(㎡)': specs.연면적 || 0
+            '건물명': specs.건물명,
+            '연면적(㎡)': specs.연면적
           }
         }
       ]);

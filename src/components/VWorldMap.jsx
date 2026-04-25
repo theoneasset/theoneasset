@@ -104,8 +104,10 @@ const VWorldMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
     matches.forEach(match => {
       if (match.matchRate < 90) return;
 
-      // 주소를 좌표로 변환 (VWorld Geocoder 활용) - 하드코딩된 키 사용으로 안정성 확보
-      const apiKey = "AF341AFE-051D-3ECA-8E14-103E58EB9B5F";
+      // [Security] 환경 변수에서 키를 읽어오도록 수정 (하드코딩 제거)
+      const apiKey = import.meta.env.VITE_VWORLD_KEY;
+      if (!apiKey) return;
+
       const geocodeUrl = `https://api.vworld.kr/req/address?service=address&request=getcoord&version=2.0&crs=epsg:3857&address=${encodeURIComponent(match.주소)}&refine=true&simple=false&format=json&type=parcel&key=${apiKey}`;
 
       fetch(geocodeUrl)

@@ -37,18 +37,20 @@ const HybridMap = ({ matches, selectedMatch, isScanning, onStartScan, filters })
       maxZoom: 19
     }).addTo(leafletMap.current);
 
-    // 브이월드 WMS (지적도)
-    const apiKey = "AF341AFE-051D-3ECA-8E14-103E58EB9B5F";
-    vworldWmsLayer.current = window.L.tileLayer.wms('https://api.vworld.kr/req/wms', {
-      layers: 'LP_PA_CBND_BUBUN,LT_C_UQ111,LT_C_UQ112',
-      format: 'image/png',
-      transparent: true,
-      version: '1.3.0',
-      key: apiKey,
-      opacity: 0.6
-    });
+    // 브이월드 WMS (지적도) - 환경 변수 사용
+    const apiKey = import.meta.env.VITE_VWORLD_KEY;
+    if (apiKey) {
+      vworldWmsLayer.current = window.L.tileLayer.wms('https://api.vworld.kr/req/wms', {
+        layers: 'LP_PA_CBND_BUBUN,LT_C_UQ111,LT_C_UQ112',
+        format: 'image/png',
+        transparent: true,
+        version: '1.3.0',
+        key: apiKey,
+        opacity: 0.6
+      });
 
-    if (isCadastral) vworldWmsLayer.current.addTo(leafletMap.current);
+      if (isCadastral) vworldWmsLayer.current.addTo(leafletMap.current);
+    }
 
     // 레이어 그룹 설정
     markersLayer.current = window.L.layerGroup().addTo(leafletMap.current);
@@ -135,7 +137,9 @@ const HybridMap = ({ matches, selectedMatch, isScanning, onStartScan, filters })
       if (match.lat && match.lon) {
         createMarker(match, match.lat, match.lon);
       } else {
-        const apiKey = "AF341AFE-051D-3ECA-8E14-103E58EB9B5F";
+        const apiKey = import.meta.env.VITE_VWORLD_KEY;
+        if (!apiKey) return;
+
         const domain = window.location.origin;
         const geocodeUrl = `https://api.vworld.kr/req/address?service=address&request=getcoord&version=2.0&crs=epsg:4326&address=${encodeURIComponent(match.주소)}&refine=true&simple=false&format=json&type=parcel&key=${apiKey}&domain=${domain}`;
         fetch(geocodeUrl).then(res => res.json()).then(data => {
