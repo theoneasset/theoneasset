@@ -11,7 +11,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [status, setStatus] = useState('loading'); 
   const [isAuthFailed, setIsAuthFailed] = useState(false);
 
-  const CLIENT_ID = import.meta.env.VITE_MY_NAVER_MAP_CLIENT_ID;
+  const CLIENT_ID = "1hbpt7fb00"; // [임시 하드코딩] 환경변수 주입 문제 진단용
 
   // [1] 지도 초기화 로직 (철저한 중복 방지)
   useEffect(() => {
