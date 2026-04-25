@@ -168,6 +168,24 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
     return () => clearTimeout(timer);
   }, [matches, status, isAuthFailed]);
 
+  // [3] 선택된 매물로 부드럽게 이동
+  useEffect(() => {
+    if (!nMap.current || !selectedMatch || !selectedMatch.lat || !selectedMatch.lon) return;
+
+    const targetPos = new window.naver.maps.LatLng(selectedMatch.lat, selectedMatch.lon);
+    
+    nMap.current.panTo(targetPos, {
+      duration: 1500,
+      easing: 'easeOutCubic'
+    });
+    
+    // 약간의 딜레이 후 줌인 및 마커 클릭 효과 (선택 시각화)
+    setTimeout(() => {
+      if (nMap.current) nMap.current.setZoom(19, true);
+    }, 1000);
+
+  }, [selectedMatch]);
+
   const toggleCadastral = () => {
     if (nMap.current) {
       const next = !isCadastral;
