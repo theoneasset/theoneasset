@@ -137,7 +137,7 @@ const HybridMap = ({ matches, selectedMatch, isScanning, onStartScan, filters })
       if (match.lat && match.lon) {
         createMarker(match, match.lat, match.lon);
       } else {
-        const apiKey = import.meta.env.VITE_VWORLD_KEY;
+        const apiKey = import.meta.env.VITE_MY_VWORLD_KEY;
         if (!apiKey) return;
 
         const domain = window.location.origin;

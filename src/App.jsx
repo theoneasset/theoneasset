@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
-import NaverMap from './components/NaverMap';
+import HybridMap from './components/HybridMap';
 import AdminDashboard from './components/AdminDashboard';
 import BuildingDetailView from './components/BuildingDetailView';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -204,11 +204,12 @@ function App() {
 
         <ErrorBoundary>
           {activeTab === 'map' ? (
-            <NaverMap 
+            <HybridMap 
               matches={filteredMatches} 
               selectedMatch={selectedMatch} 
               isScanning={isScanning}
               onStartScan={runScanningProcess}
+              filters={filters}
             />
           ) : (
             <AdminDashboard matches={matches} />
