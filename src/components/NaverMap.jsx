@@ -11,7 +11,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [status, setStatus] = useState('loading'); 
   const [isAuthFailed, setIsAuthFailed] = useState(false);
 
-  const CLIENT_ID = "ndllethlqv";
+  const CLIENT_ID = "ndllethlqv"; // 최종 업데이트된 클라이언트 ID
 
   // [1] 지도 초기화 로직 (철저한 중복 방지)
   useEffect(() => {
