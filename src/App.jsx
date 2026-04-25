@@ -10,7 +10,6 @@ import { airtableService } from './api/airtable';
 import { findBestMatch } from './api/matchingEngine';
 import { solapiService } from './api/solapi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map as MapIcon, LayoutDashboard } from 'lucide-react';
 import { Map as MapIcon, LayoutDashboard, AlertTriangle } from 'lucide-react';
 import './index.css';
 
@@ -30,7 +29,7 @@ function App() {
           에어테이블 환경 변수 미설정 (Check Vercel Settings)
         </h1>
         <p style={{ color: '#94a3b8', lineHeight: '1.6' }}>
-          VITE_AIRTABLE_API_KEY 또는 VITE_AIRTABLE_BASE_ID가 확인되지 않습니다.<br/>
+          VITE_MY_AIRTABLE_API_KEY 또는 VITE_MY_AIRTABLE_BASE_ID가 확인되지 않습니다.<br/>
           Vercel 대시보드의 Environment Variables 설정을 확인해 주세요.
         </p>
       </div>
