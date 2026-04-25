@@ -20,9 +20,13 @@ Airtable.configure({
 
 const base = Airtable.base(BASE_ID);
 
-// [중요] 테이블 역할 분리
-const MASTER_TABLE = '부동산 매물 관리';    // 건축물대장 마스터 데이터
-const LISTING_TABLE = '온라인매물_수집';   // 수집된 매물 결과 저장
+// [중요] 테이블 역할 분리 (환경 변수 사용)
+const MASTER_TABLE = import.meta.env.VITE_MY_AIRTABLE_TABLE_MY_BUILDINGS || '부동산 매물 관리';
+const LISTING_TABLE = import.meta.env.VITE_MY_AIRTABLE_TABLE_MY_LISTINGS || '온라인매물_수집';
+const CLIENTS_TABLE = import.meta.env.VITE_MY_AIRTABLE_TABLE_MY_CLIENTS;
+const PROPOSALS_TABLE = import.meta.env.VITE_MY_AIRTABLE_TABLE_MY_PROPOSALS;
+const CONTENT_TABLE = import.meta.env.VITE_MY_AIRTABLE_TABLE_MY_CONTENT;
+const COSTS_TABLE = import.meta.env.VITE_MY_AIRTABLE_TABLE_MY_COSTS;
 
 export const airtableService = {
   // 마스터(건축물대장) 정보 로드
