@@ -15,22 +15,28 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [status, setStatus] = useState('loading'); 
   const [isAuthFailed, setIsAuthFailed] = useState(false);
   const [isStreetViewMode, setIsStreetViewMode] = useState(false);
-  const [activePano, setActivePano] = useState(null);
+  const [activePanoCoord, setActivePanoCoord] = useState(null);
 
-  const CLIENT_ID = 'e895s7e6z8';
-  console.log('🔍 [MAP-DEBUG] Using Client ID:', CLIENT_ID);
+  // [파노라마 렌더링 후 초기화]
+  useEffect(() => {
+    if (activePanoCoord && panoRef.current) {
+      if (!panorama.current) {
+        panorama.current = new window.naver.maps.Panorama(panoRef.current, {
+          position: activePanoCoord,
+          pov: { heading: 0, pitch: 0, zoom: 1 }
+        });
+      } else {
+        panorama.current.setPosition(activePanoCoord);
+      }
+    }
+  }, [activePanoCoord]);
 
   const initPanorama = (coord) => {
-    if (!panoRef.current) return;
-    if (!panorama.current) {
-      panorama.current = new window.naver.maps.Panorama(panoRef.current, {
-        position: coord,
-        pov: { heading: 0, pitch: 0, zoom: 1 }
-      });
-    } else {
-      panorama.current.setPosition(coord);
-    }
-    setActivePano(coord);
+    setActivePanoCoord(coord);
+  };
+
+  const closePanorama = () => {
+    setActivePanoCoord(null);
   };
 
   const toggleStreetView = () => {
@@ -271,7 +277,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
       <div id="map" ref={mapRef} />
 
       {/* 거리뷰 파노라마 오버레이 */}
-      {activePano && (
+      {activePanoCoord && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 200, background: 'black' }}>
           <div ref={panoRef} style={{ width: '100%', height: '100%' }} />
           <button 
