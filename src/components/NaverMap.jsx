@@ -19,6 +19,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [isAuthFailed, setIsAuthFailed] = useState(false);
   const [isStreetViewMode, setIsStreetViewMode] = useState(false);
   const [activePanoCoord, setActivePanoCoord] = useState(null);
+  const [panoPov, setPanoPov] = useState({ heading: 0, pitch: 0 }); // POV 상태 추가
   const [showPanoLabels, setShowPanoLabels] = useState(true);
   const [isPanoMinimized, setIsPanoMinimized] = useState(false);
 
@@ -30,25 +31,26 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
         panorama.current = new window.naver.maps.Panorama(panoRef.current, {
           position: activePanoCoord,
           pov: { heading: 0, pitch: 0, zoom: 1 },
-          aroundControl: true, // 기본 주변 컨트롤 활성화
+          aroundControl: true,
         });
 
+        // 위치 변경 감지
         window.naver.maps.Event.addListener(panorama.current, 'position_changed', () => {
           const newPos = panorama.current.getPosition();
           if (miniMap.current) miniMap.current.setCenter(newPos);
           if (miniMarker.current) miniMarker.current.setPosition(newPos);
         });
 
+        // POV(방향) 변경 감지
         window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
           const pov = panorama.current.getPov();
-          const iconEl = document.getElementById('pano-direction-icon');
-          if (iconEl) iconEl.style.transform = `rotate(${pov.heading}deg)`;
+          setPanoPov({ heading: pov.heading, pitch: pov.pitch });
         });
       } else {
         panorama.current.setPosition(activePanoCoord);
       }
 
-      // 미니맵 초기화 (지연 실행)
+      // 미니맵 초기화
       setTimeout(() => {
         if (miniMapRef.current && !miniMap.current) {
           miniMap.current = new window.naver.maps.Map(miniMapRef.current, {
@@ -56,22 +58,20 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
             zoom: 17,
             draggable: true,
             scrollWheel: false,
-            disableDoubleClickZoom: true,
             mapDataControl: false
           });
           
-          // 미니맵에도 거리뷰 레이어 추가
           const miniStreetLayer = new window.naver.maps.StreetLayer();
           miniStreetLayer.setMap(miniMap.current);
 
-          // 방향 표시 마커 (Naver 스타일 회전 콘)
+          // 방향 표시 마커 (Naver 스타일)
           miniMarker.current = new window.naver.maps.Marker({
             position: activePanoCoord,
             map: miniMap.current,
             icon: {
               content: `
-                <div id="pano-direction-icon" style="position: relative; width: 80px; height: 80px; transform-origin: center; transition: transform 0.1s; display: flex; align-items: center; justify-content: center;">
-                  <div style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.5); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
+                <div class="pano-direction-wrapper" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                  <div class="direction-cone" style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.5); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
                   <div style="position: relative; width: 14px; height: 14px; background: white; border: 2.5px solid #334155; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); z-index: 2;"></div>
                 </div>
               `,
@@ -79,9 +79,17 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
             }
           });
         }
-      }, 200);
+      }, 300);
     }
   }, [activePanoCoord]);
+
+  // [POV 상태 변경 시 마커 회전 동기화]
+  useEffect(() => {
+    if (miniMarker.current) {
+      const el = document.querySelector('.pano-direction-wrapper');
+      if (el) el.style.transform = `rotate(${panoPov.heading}deg)`;
+    }
+  }, [panoPov]);
 
   const initPanorama = (coord) => {
     setActivePanoCoord(coord);
