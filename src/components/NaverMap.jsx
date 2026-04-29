@@ -35,23 +35,26 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
         aroundControl: true,
       });
 
-      // 위치 변경 시 미니맵 동기화 리스너 (한 번만 등록)
+      // 위치 변경 시 미니맵 동기화 리스너
       window.naver.maps.Event.addListener(panorama.current, 'position_changed', () => {
         const newPos = panorama.current.getPosition();
-        if (miniMap.current) {
-          miniMap.current.setCenter(newPos);
-        }
-        if (miniMarker.current) {
-          miniMarker.current.setPosition(newPos);
-        }
+        if (miniMap.current) miniMap.current.setCenter(newPos);
+        if (miniMarker.current) miniMarker.current.setPosition(newPos);
       });
 
-      // POV 변경 시 방향 아이콘 회전 리스너
+      // POV 변경 시 방향 아이콘 회전 리스너 (setIcon 사용으로 신뢰성 확보)
       window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
         const pov = panorama.current.getPov();
-        const iconEl = document.querySelector('.pano-direction-wrapper');
-        if (iconEl) {
-          iconEl.style.transform = `rotate(${pov.heading}deg)`;
+        if (miniMarker.current) {
+          miniMarker.current.setIcon({
+            content: `
+              <div class="pano-direction-wrapper" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; transform: rotate(${pov.heading}deg); transition: transform 0.1s ease-out;">
+                <div class="direction-cone" style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.7); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
+                <div style="position: relative; width: 14px; height: 14px; background: white; border: 2.5px solid #334155; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); z-index: 2;"></div>
+              </div>
+            `,
+            anchor: new window.naver.maps.Point(40, 40)
+          });
         }
       });
     } else {
@@ -73,14 +76,15 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
       const miniStreetLayer = new window.naver.maps.StreetLayer();
       miniStreetLayer.setMap(miniMap.current);
 
-      // 방향 표시 마커 추가
+      // 방향 표시 마커 추가 (초기 POV 반영)
+      const initialPov = panorama.current ? panorama.current.getPov() : { heading: 0 };
       miniMarker.current = new window.naver.maps.Marker({
         position: activePanoCoord,
         map: miniMap.current,
         icon: {
           content: `
-            <div class="pano-direction-wrapper" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; transition: transform 0.1s ease-out;">
-              <div class="direction-cone" style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.6); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
+            <div class="pano-direction-wrapper" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; transform: rotate(${initialPov.heading}deg); transition: transform 0.1s ease-out;">
+              <div class="direction-cone" style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.7); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
               <div style="position: relative; width: 14px; height: 14px; background: white; border: 2.5px solid #334155; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); z-index: 2;"></div>
             </div>
           `,
