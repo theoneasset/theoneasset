@@ -57,11 +57,15 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           setTimeout(forceResize, 300); // 2차 리사이즈로 타이밍 완벽 방어
         });
 
-        // 위치 변경 리스너
+        // [핵심] 위치 변경 시 미니맵 중심 및 마커 좌표 동기화
         window.naver.maps.Event.addListener(panorama.current, 'position_changed', () => {
           const newPos = panorama.current.getPosition();
-          if (miniMap.current) miniMap.current.setCenter(newPos);
-          if (miniMarker.current) miniMarker.current.setPosition(newPos);
+          if (miniMap.current) {
+            miniMap.current.setCenter(newPos);
+          }
+          if (miniMarker.current) {
+            miniMarker.current.setPosition(newPos);
+          }
         });
 
         // POV 변경 리스너 (바닐라 JS 방식)
