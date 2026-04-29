@@ -1,21 +1,53 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Layers, Search, AlertTriangle, MapPin, Ruler, Star, Plus, Minus } from 'lucide-react';
+import { Layers, Search, AlertTriangle, MapPin, Ruler, Star, Plus, Minus, X } from 'lucide-react';
 import BuildingDetailView from './BuildingDetailView';
 
 const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const nMap = useRef(null);
   const mapRef = useRef(null); // DOM 참조를 위한 Ref 추가
+  const panoRef = useRef(null); // 파노라마 전용 Ref
+  const panorama = useRef(null);
+  const streetLayer = useRef(null);
   const markers = useRef([]);
   const infoWindowRoot = useRef(null);
   const [isCadastral, setIsCadastral] = useState(true);
   const [status, setStatus] = useState('loading'); 
   const [isAuthFailed, setIsAuthFailed] = useState(false);
+  const [isStreetViewMode, setIsStreetViewMode] = useState(false);
+  const [activePano, setActivePano] = useState(null);
 
   const CLIENT_ID = 'e895s7e6z8';
   console.log('🔍 [MAP-DEBUG] Using Client ID:', CLIENT_ID);
 
-  // [1] 지도 초기화 로직 (철저한 중복 방지)
+  const initPanorama = (coord) => {
+    if (!panoRef.current) return;
+    if (!panorama.current) {
+      panorama.current = new window.naver.maps.Panorama(panoRef.current, {
+        position: coord,
+        pov: { heading: 0, pitch: 0, zoom: 1 }
+      });
+    } else {
+      panorama.current.setPosition(coord);
+    }
+    setActivePano(coord);
+  };
+
+  const toggleStreetView = () => {
+    if (!nMap.current || !streetLayer.current) return;
+    const isVisible = !!streetLayer.current.getMap();
+    if (isVisible) {
+      streetLayer.current.setMap(null);
+      setIsStreetViewMode(false);
+    } else {
+      streetLayer.current.setMap(nMap.current);
+      setIsStreetViewMode(true);
+    }
+  };
+
+  const closePanorama = () => {
+    setActivePano(null);
+  };
   useEffect(() => {
     let isMounted = true;
 
@@ -39,6 +71,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
         
         // 인스턴스 선점 저장
         nMap.current = mapInstance;
+        streetLayer.current = new window.naver.maps.StreetLayer();
 
         window.naver.maps.Event.once(mapInstance, 'init', () => {
           if (!isMounted) return;
@@ -47,6 +80,12 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           
           // 지도가 잘리거나 사라지는 현상 방지를 위해 강제 리사이즈 트리거
           window.naver.maps.Event.trigger(mapInstance, 'resize');
+        });
+
+        window.naver.maps.Event.addListener(mapInstance, 'click', (e) => {
+          if (streetLayer.current.getMap()) {
+            initPanorama(e.coord);
+          }
         });
 
         window.naver.maps.Event.addListener(mapInstance, 'auth_failed', () => {
@@ -230,6 +269,24 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   return (
     <div className="map-parent-container">
       <div id="map" ref={mapRef} />
+
+      {/* 거리뷰 파노라마 오버레이 */}
+      {activePano && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 200, background: 'black' }}>
+          <div ref={panoRef} style={{ width: '100%', height: '100%' }} />
+          <button 
+            onClick={closePanorama} 
+            style={{ 
+              position: 'absolute', top: '20px', right: '20px', zIndex: 210,
+              background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%',
+              width: '40px', height: '40px', color: 'white', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}
+          >
+            <X size={24} />
+          </button>
+        </div>
+      )}
       
       {status === 'loading' && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 50, background: '#0b1120' }}>
@@ -262,8 +319,12 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           {/* 우측 중앙 툴바 컨트롤 모음 */}
           <div style={{ position: 'absolute', top: '140px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {/* 거리뷰 버튼 */}
-            <button className="glass map-tool-btn">
-              <MapPin size={20} />
+            <button 
+              onClick={toggleStreetView} 
+              className={`glass map-tool-btn ${isStreetViewMode ? 'active' : ''}`}
+              style={{ color: isStreetViewMode ? 'var(--accent)' : '#334155' }}
+            >
+              <MapPin size={20} fill={isStreetViewMode ? 'var(--accent)' : 'none'} />
               <span className="tool-label">거리뷰</span>
             </button>
             
