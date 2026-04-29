@@ -466,10 +466,18 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
 
           {/* 하단 UI (주소 및 미니맵) */}
           <div className="pano-bottom-ui">
-            <div className="pano-address-box">
-              <MapPin size={18} color="#6366f1" />
-              <span>서울특별시 강남구 역삼동</span>
-              <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 400, marginLeft: '10px' }}>2024년 01월 (최신)</span>
+            {/* 거리뷰 주소 정보 (미니맵 상단 고정) */}
+            <div className="pano-address-info glass" style={{ width: `${miniMapSize.width}px`, boxSizing: 'border-box' }}>
+              <MapPin size={18} className="text-blue-500 flex-shrink-0" />
+              <span className="address-text" style={{ 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap',
+                flex: 1
+              }}>
+                서울특별시 강남구 역삼동
+              </span>
+              <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 400, marginLeft: '10px', whiteSpace: 'nowrap' }}>2024년 01월 (최신)</span>
             </div>
             
             <div 
