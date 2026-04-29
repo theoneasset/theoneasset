@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Layers, Search, AlertTriangle, MapPin, Ruler, Star, Plus, Minus, X } from 'lucide-react';
+import { Layers, Search, AlertTriangle, MapPin, Ruler, Star, Plus, Minus, X, Minimize2, Maximize2, Info } from 'lucide-react';
 import BuildingDetailView from './BuildingDetailView';
 
 const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const nMap = useRef(null);
   const mapRef = useRef(null); // DOM 참조를 위한 Ref 추가
   const panoRef = useRef(null); // 파노라마 전용 Ref
+  const miniMapRef = useRef(null); // 미니맵 전용 Ref
   const panorama = useRef(null);
+  const miniMap = useRef(null);
   const streetLayer = useRef(null);
   const markers = useRef([]);
   const infoWindowRoot = useRef(null);
@@ -16,18 +18,45 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [isAuthFailed, setIsAuthFailed] = useState(false);
   const [isStreetViewMode, setIsStreetViewMode] = useState(false);
   const [activePanoCoord, setActivePanoCoord] = useState(null);
+  const [showPanoLabels, setShowPanoLabels] = useState(true);
+  const [isPanoMinimized, setIsPanoMinimized] = useState(false);
 
   // [파노라마 렌더링 후 초기화]
   useEffect(() => {
     if (activePanoCoord && panoRef.current) {
+      // 파노라마 초기화
       if (!panorama.current) {
         panorama.current = new window.naver.maps.Panorama(panoRef.current, {
           position: activePanoCoord,
-          pov: { heading: 0, pitch: 0, zoom: 1 }
+          pov: { heading: 0, pitch: 0, zoom: 1 },
+          aroundControl: true, // 기본 주변 컨트롤 활성화
+        });
+
+        window.naver.maps.Event.addListener(panorama.current, 'position_changed', () => {
+          const newPos = panorama.current.getPosition();
+          if (miniMap.current) miniMap.current.setCenter(newPos);
         });
       } else {
         panorama.current.setPosition(activePanoCoord);
       }
+
+      // 미니맵 초기화 (지연 실행)
+      setTimeout(() => {
+        if (miniMapRef.current && !miniMap.current) {
+          miniMap.current = new window.naver.maps.Map(miniMapRef.current, {
+            center: activePanoCoord,
+            zoom: 16,
+            draggable: false,
+            scrollWheel: false,
+            disableDoubleClickZoom: true,
+            mapDataControl: false
+          });
+          
+          // 미니맵에도 거리뷰 레이어 추가
+          const miniStreetLayer = new window.naver.maps.StreetLayer();
+          miniStreetLayer.setMap(miniMap.current);
+        }
+      }, 100);
     }
   }, [activePanoCoord]);
 
@@ -37,6 +66,9 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
 
   const closePanorama = () => {
     setActivePanoCoord(null);
+    if (miniMap.current) {
+      miniMap.current = null;
+    }
   };
 
   const toggleStreetView = () => {
@@ -274,19 +306,43 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
 
       {/* 거리뷰 파노라마 오버레이 */}
       {activePanoCoord && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 200, background: 'black' }}>
+        <div className={`pano-overlay ${isPanoMinimized ? 'minimized' : ''}`}>
           <div ref={panoRef} style={{ width: '100%', height: '100%' }} />
-          <button 
-            onClick={closePanorama} 
-            style={{ 
-              position: 'absolute', top: '20px', right: '20px', zIndex: 210,
-              background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%',
-              width: '40px', height: '40px', color: 'white', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}
-          >
-            <X size={24} />
-          </button>
+          
+          {/* 상단 중앙 정보 레이블 & 토글 */}
+          <div className="pano-info-label">
+            <span>장소 · 방면정보 표기</span>
+            <label className="switch">
+              <input type="checkbox" checked={showPanoLabels} onChange={() => setShowPanoLabels(!showPanoLabels)} />
+              <span className="slider"></span>
+            </label>
+            <span style={{ fontSize: '0.7rem', opacity: 0.8, color: showPanoLabels ? '#6366f1' : 'white' }}>
+              {showPanoLabels ? 'ON' : 'OFF'}
+            </span>
+          </div>
+
+          {/* 상단 우측 컨트롤 세트 */}
+          <div className="pano-top-controls">
+            <button onClick={() => setIsPanoMinimized(!isPanoMinimized)} className="pano-control-btn" title={isPanoMinimized ? '확대' : '축소'}>
+              {isPanoMinimized ? <Maximize2 size={20} /> : <Minimize2 size={20} />}
+            </button>
+            <button onClick={closePanorama} className="pano-control-btn" title="닫기">
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* 하단 UI (주소 및 미니맵) */}
+          <div className="pano-bottom-ui">
+            <div className="pano-address-box">
+              <MapPin size={18} color="#6366f1" />
+              <span>서울특별시 강남구 역삼동</span>
+              <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 400, marginLeft: '10px' }}>2024년 01월 (최신)</span>
+            </div>
+            
+            <div className="pano-minimap-container">
+              <div ref={miniMapRef} style={{ width: '100%', height: '100%' }} />
+            </div>
+          </div>
         </div>
       )}
       
