@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Layers, Search, AlertTriangle } from 'lucide-react';
+import { Layers, Search, AlertTriangle, MapPin, Ruler, Star, Plus, Minus } from 'lucide-react';
 import BuildingDetailView from './BuildingDetailView';
 
 const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
@@ -230,7 +230,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
 
       {status === 'ready' && (
         <>
-          {/* 우측 상단 컨트롤 */}
+          {/* 우측 상단 메인 액션 버튼 */}
           <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button onClick={onStartScan} disabled={isScanning} className="glass action-btn" style={{ background: 'rgba(99, 102, 241, 0.5)', borderColor: 'rgba(165, 180, 252, 0.3)' }}>
               <Search size={18} />
@@ -242,22 +242,35 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
             </button>
           </div>
 
-          {/* 우측 하단 커스텀 줌 컨트롤 */}
-          <div style={{ position: 'absolute', bottom: '30px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button 
-              onClick={() => handleZoom(1)} 
-              className="glass zoom-btn"
-              style={{ width: '40px', height: '40px', fontSize: '20px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              +
+          {/* 우측 중앙 툴바 컨트롤 모음 */}
+          <div style={{ position: 'absolute', top: '140px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* 거리뷰 버튼 */}
+            <button className="glass map-tool-btn">
+              <MapPin size={20} />
+              <span className="tool-label">거리뷰</span>
             </button>
-            <button 
-              onClick={() => handleZoom(-1)} 
-              className="glass zoom-btn"
-              style={{ width: '40px', height: '40px', fontSize: '20px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              -
+            
+            {/* 거리 측정 버튼 */}
+            <button className="glass map-tool-btn">
+              <Ruler size={20} />
+              <span className="tool-label">거리</span>
             </button>
+
+            {/* 저장 버튼 */}
+            <button className="glass map-tool-btn">
+              <Star size={20} fill="none" />
+              <span className="tool-label">저장</span>
+            </button>
+
+            {/* 줌 컨트롤 (이미지 스타일 반영) */}
+            <div className="zoom-control-container">
+              <button onClick={() => handleZoom(1)} className="zoom-btn-v2 top">
+                <Plus size={18} />
+              </button>
+              <button onClick={() => handleZoom(-1)} className="zoom-btn-v2 bottom">
+                <Minus size={18} />
+              </button>
+            </div>
           </div>
         </>
       )}
