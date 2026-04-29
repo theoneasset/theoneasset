@@ -22,7 +22,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [activePanoCoord, setActivePanoCoord] = useState(null);
   const [showPanoLabels, setShowPanoLabels] = useState(true);
   const [isPanoMinimized, setIsPanoMinimized] = useState(false);
-  const [miniMapSize, setMiniMapSize] = useState({ width: 200, height: 160 });
+  const [miniMapSize, setMiniMapSize] = useState({ width: 320, height: 180 });
   const [isResizing, setIsResizing] = useState(false);
 
   // [거리뷰 & 미니맵 인스턴스 초기화 및 동기화 로직]
