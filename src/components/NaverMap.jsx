@@ -19,83 +19,88 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [isAuthFailed, setIsAuthFailed] = useState(false);
   const [isStreetViewMode, setIsStreetViewMode] = useState(false);
   const [activePanoCoord, setActivePanoCoord] = useState(null);
-  const [panoPov, setPanoPov] = useState({ heading: 0, pitch: 0 }); // POV 상태 추가
   const [showPanoLabels, setShowPanoLabels] = useState(true);
   const [isPanoMinimized, setIsPanoMinimized] = useState(false);
 
-  // [파노라마 & 미니맵 강제 동기화 로직]
+  // [거리뷰 & 미니맵 인스턴스 초기화 및 동기화 로직]
   useEffect(() => {
-    if (!activePanoCoord || !panoRef.current) return;
+    // 거리뷰가 닫혔을 때는 정리에만 집중
+    if (!activePanoCoord || !panoRef.current) {
+      return () => {
+        if (miniMap.current) miniMap.current = null;
+        if (miniMarker.current) miniMarker.current = null;
+      };
+    }
 
-    let syncInterval = null;
+    // 1. 파노라마 인스턴스 생성 및 리스너 바인딩 (최초 1회만)
+    if (!panorama.current) {
+      panorama.current = new window.naver.maps.Panorama(panoRef.current, {
+        position: activePanoCoord,
+        pov: { heading: 0, pitch: 0, zoom: 1 },
+        aroundControl: false,
+      });
 
-    const initAll = () => {
-      // 1. 파노라마 초기화
-      if (!panorama.current) {
-        panorama.current = new window.naver.maps.Panorama(panoRef.current, {
-          position: activePanoCoord,
-          pov: { heading: 0, pitch: 0, zoom: 1 },
-          aroundControl: false, // 커스텀 미니맵을 사용하므로 끕니다.
-        });
-      } else {
-        panorama.current.setPosition(activePanoCoord);
-      }
+      // [핵심] 파노라마 이벤트 리스너 등록
+      window.naver.maps.Event.addListener(panorama.current, 'position_changed', () => {
+        const newPos = panorama.current.getPosition();
+        if (miniMap.current) miniMap.current.setCenter(newPos);
+        if (miniMarker.current) miniMarker.current.setPosition(newPos);
+      });
 
-      // 2. 미니맵 초기화
-      if (!miniMap.current && miniMapRef.current) {
-        miniMap.current = new window.naver.maps.Map(miniMapRef.current, {
-          center: activePanoCoord,
-          zoom: 17,
-          draggable: true,
-          scrollWheel: false,
-          mapDataControl: false
-        });
-
-        const miniStreetLayer = new window.naver.maps.StreetLayer();
-        miniStreetLayer.setMap(miniMap.current);
-
-        // 방향 마커 (Naver 스타일)
-        miniMarker.current = new window.naver.maps.Marker({
-          position: activePanoCoord,
-          map: miniMap.current,
-          icon: {
+      window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
+        const pov = panorama.current.getPov();
+        if (miniMarker.current) {
+          // 마커 아이콘을 setIcon으로 업데이트하여 시선 방향(heading) 반영
+          miniMarker.current.setIcon({
             content: `
-              <div id="pano-direction-sync" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; transition: transform 0.1s ease-out;">
-                <div class="direction-cone" style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.7); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
+              <div id="pano-direction-cone" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; transform: rotate(${pov.heading}deg); transition: transform 0.1s ease-out;">
+                <div style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.7); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
                 <div style="position: relative; width: 14px; height: 14px; background: white; border: 2.5px solid #334155; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); z-index: 2;"></div>
               </div>
             `,
             anchor: new window.naver.maps.Point(40, 40)
-          }
-        });
-      }
-
-      // 3. 강제 동기화 루프 시작 (0.1초마다 체크)
-      syncInterval = setInterval(() => {
-        if (panorama.current && miniMap.current && miniMarker.current) {
-          const currentPos = panorama.current.getPosition();
-          const currentPov = panorama.current.getPov();
-          
-          // 위치 동기화
-          if (!miniMap.current.getCenter().equals(currentPos)) {
-            miniMap.current.setCenter(currentPos);
-            miniMarker.current.setPosition(currentPos);
-          }
-
-          // 방향(회전) 동기화 - DOM 직접 접근으로 지연 제거
-          const iconEl = document.getElementById('pano-direction-sync');
-          if (iconEl) {
-            iconEl.style.transform = `rotate(${currentPov.heading}deg)`;
-          }
+          });
         }
-      }, 100);
+      });
+    } else {
+      panorama.current.setPosition(activePanoCoord);
+    }
+
+    // 2. 미니맵 인스턴스 생성 및 초기 마커 설정
+    const setupMiniMap = () => {
+      if (!miniMapRef.current || miniMap.current) return;
+
+      miniMap.current = new window.naver.maps.Map(miniMapRef.current, {
+        center: activePanoCoord,
+        zoom: 17,
+        draggable: true,
+        scrollWheel: false,
+        mapDataControl: false
+      });
+
+      const miniStreetLayer = new window.naver.maps.StreetLayer();
+      miniStreetLayer.setMap(miniMap.current);
+
+      // 방향 표시용 마커 생성
+      const currentPov = panorama.current.getPov();
+      miniMarker.current = new window.naver.maps.Marker({
+        position: activePanoCoord,
+        map: miniMap.current,
+        icon: {
+          content: `
+            <div id="pano-direction-cone" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; transform: rotate(${currentPov.heading}deg); transition: transform 0.1s ease-out;">
+              <div style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.7); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
+              <div style="position: relative; width: 14px; height: 14px; background: white; border: 2.5px solid #334155; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); z-index: 2;"></div>
+            </div>
+          `,
+          anchor: new window.naver.maps.Point(40, 40)
+        }
+      });
     };
 
-    const timer = setTimeout(initAll, 500);
-
+    const timer = setTimeout(setupMiniMap, 400);
     return () => {
       clearTimeout(timer);
-      if (syncInterval) clearInterval(syncInterval);
     };
   }, [activePanoCoord]);
 
