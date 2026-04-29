@@ -203,8 +203,8 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   }
 
   return (
-    <div style={{ width: '100%', height: '600px', position: 'relative', background: '#0b0f19' }}>
-      <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: '600px' }} />
+    <div className="map-parent-container">
+      <div id="map" ref={mapRef} />
       
       {status === 'loading' && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 50, background: '#0b1120' }}>

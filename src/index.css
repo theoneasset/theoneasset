@@ -509,3 +509,19 @@ body {
 .dong-btn:active {
   transform: translateY(1px);
 }
+
+/* NaverMap 컴포넌트를 감싸는 가장 바깥쪽 container */
+.map-parent-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%; /* 부모의 flex: 1을 따름 */
+    overflow: hidden;
+    position: relative;
+}
+
+/* 지도가 실제 렌더링되는 div */
+#map {
+    height: 100% !important;
+    width: 100% !important;
+}
