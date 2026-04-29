@@ -24,7 +24,6 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
 
   // [거리뷰 & 미니맵 인스턴스 초기화 및 동기화 로직]
   useEffect(() => {
-    // 거리뷰가 닫혔을 때는 정리에만 집중
     if (!activePanoCoord || !panoRef.current) {
       return () => {
         if (miniMap.current) miniMap.current = null;
@@ -32,80 +31,89 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
       };
     }
 
-    // 1. 파노라마 인스턴스 생성 및 리스너 바인딩 (최초 1회만)
-    if (!panorama.current) {
-      panorama.current = new window.naver.maps.Panorama(panoRef.current, {
-        position: activePanoCoord,
-        pov: { heading: 0, pitch: 0, zoom: 1 },
-        aroundControl: false,
-      });
+    const initAll = () => {
+      // 1. 파노라마 인스턴스 생성 및 리스너 바인딩
+      if (!panorama.current) {
+        panorama.current = new window.naver.maps.Panorama(panoRef.current, {
+          position: activePanoCoord,
+          pov: { heading: 0, pitch: 0, zoom: 1 },
+          aroundControl: false,
+        });
 
-      // [핵심] 파노라마 이벤트 리스너 등록
-      window.naver.maps.Event.addListener(panorama.current, 'position_changed', () => {
-        const newPos = panorama.current.getPosition();
-        if (miniMap.current) miniMap.current.setCenter(newPos);
-        if (miniMarker.current) miniMarker.current.setPosition(newPos);
-      });
+        // [핵심] 파노라마 로드 완료 후 강제 리사이즈 (검은 화면 방지)
+        window.naver.maps.Event.once(panorama.current, 'init', () => {
+          setTimeout(() => {
+            if (panorama.current) {
+              window.naver.maps.Event.trigger(panorama.current, 'resize');
+            }
+          }, 100);
+        });
 
-      // POV 변경 시 바닐라 JS 방식으로 DOM 직접 제어 (최종 연동 완료)
-      window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
-        const currentPov = panorama.current.getPov();
+        // 위치 변경 리스너
+        window.naver.maps.Event.addListener(panorama.current, 'position_changed', () => {
+          const newPos = panorama.current.getPosition();
+          if (miniMap.current) miniMap.current.setCenter(newPos);
+          if (miniMarker.current) miniMarker.current.setPosition(newPos);
+        });
+
+        // POV 변경 리스너 (바닐라 JS 방식)
+        window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
+          const pov = panorama.current.getPov();
+          const currentPan = (pov.heading !== undefined) ? pov.heading : (pov.pan || 0);
+          const iconEl = document.getElementById('minimap-dir-icon');
+          if (iconEl) iconEl.style.transform = `rotate(${currentPan}deg)`;
+        });
+      } else {
+        panorama.current.setPosition(activePanoCoord);
+        setTimeout(() => {
+          window.naver.maps.Event.trigger(panorama.current, 'resize');
+        }, 100);
+      }
+
+      // 2. 미니맵 인스턴스 생성 및 초기 마커 설정
+      if (!miniMap.current && miniMapRef.current) {
+        miniMap.current = new window.naver.maps.Map(miniMapRef.current, {
+          center: activePanoCoord,
+          zoom: 17,
+          draggable: true,
+          scrollWheel: false,
+          mapDataControl: false
+        });
+
+        // 미니맵 리사이즈 트리거
+        window.naver.maps.Event.trigger(miniMap.current, 'resize');
+
+        const miniStreetLayer = new window.naver.maps.StreetLayer();
+        miniStreetLayer.setMap(miniMap.current);
+
+        const currentPov = panorama.current ? panorama.current.getPov() : { heading: 0 };
         const currentPan = (currentPov.heading !== undefined) ? currentPov.heading : (currentPov.pan || 0);
         
-        const iconEl = document.getElementById('minimap-dir-icon');
-        if (iconEl) {
-          iconEl.style.transform = `rotate(${currentPan}deg)`;
-        }
-      });
-    } else {
-      panorama.current.setPosition(activePanoCoord);
-    }
-
-    // 2. 미니맵 인스턴스 생성 및 초기 마커 설정
-    const setupMiniMap = () => {
-      if (!miniMapRef.current || miniMap.current) return;
-
-      miniMap.current = new window.naver.maps.Map(miniMapRef.current, {
-        center: activePanoCoord,
-        zoom: 17,
-        draggable: true,
-        scrollWheel: false,
-        mapDataControl: false
-      });
-
-      const miniStreetLayer = new window.naver.maps.StreetLayer();
-      miniStreetLayer.setMap(miniMap.current);
-
-      // 방향 표시용 마커 생성 (ID 부여 및 단 1회 렌더링)
-      const currentPov = panorama.current ? panorama.current.getPov() : { heading: 0 };
-      const currentPan = (currentPov.heading !== undefined) ? currentPov.heading : (currentPov.pan || 0);
-      
-      const markerHtml = `
-        <div style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
-          <div id="minimap-dir-icon" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform: rotate(${currentPan}deg); transition: transform 0.1s ease-out;">
-            <svg width="100" height="100" viewBox="0 0 100 100" style="overflow: visible;">
-              <path d="M 50 50 L 25 10 A 40 40 0 0 1 75 10 Z" fill="rgba(34, 197, 94, 0.45)" stroke="rgba(34, 197, 94, 0.2)" stroke-width="0.5" />
-              <circle cx="50" cy="50" r="7.5" fill="white" stroke="#334155" stroke-width="2.5" />
-              <circle cx="50" cy="50" r="8" fill="none" stroke="black" stroke-opacity="0.1" stroke-width="0.5" />
-            </svg>
+        const markerHtml = `
+          <div style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
+            <div id="minimap-dir-icon" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform: rotate(${currentPan}deg); transition: transform 0.1s ease-out;">
+              <svg width="100" height="100" viewBox="0 0 100 100" style="overflow: visible;">
+                <path d="M 50 50 L 25 10 A 40 40 0 0 1 75 10 Z" fill="rgba(34, 197, 94, 0.45)" stroke="rgba(34, 197, 94, 0.2)" stroke-width="0.5" />
+                <circle cx="50" cy="50" r="7.5" fill="white" stroke="#334155" stroke-width="2.5" />
+                <circle cx="50" cy="50" r="8" fill="none" stroke="black" stroke-opacity="0.1" stroke-width="0.5" />
+              </svg>
+            </div>
           </div>
-        </div>
-      `;
-      
-      miniMarker.current = new window.naver.maps.Marker({
-        position: activePanoCoord,
-        map: miniMap.current,
-        icon: {
-          content: markerHtml,
-          anchor: new window.naver.maps.Point(50, 50)
-        }
-      });
+        `;
+        
+        miniMarker.current = new window.naver.maps.Marker({
+          position: activePanoCoord,
+          map: miniMap.current,
+          icon: {
+            content: markerHtml,
+            anchor: new window.naver.maps.Point(50, 50)
+          }
+        });
+      }
     };
 
-    const timer = setTimeout(setupMiniMap, 400);
-    return () => {
-      clearTimeout(timer);
-    };
+    const timer = setTimeout(initAll, 400);
+    return () => clearTimeout(timer);
   }, [activePanoCoord]);
 
   const initPanorama = (coord) => {
