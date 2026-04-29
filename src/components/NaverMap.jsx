@@ -33,6 +33,10 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           mapTypeControlOptions: {
             style: window.naver.maps.MapTypeControlStyle.BUTTON,
             position: window.naver.maps.Position.TOP_LEFT
+          },
+          zoomControl: true,
+          zoomControlOptions: {
+            position: window.naver.maps.Position.BOTTOM_RIGHT
           }
         });
         
