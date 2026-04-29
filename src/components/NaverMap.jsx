@@ -94,6 +94,23 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
         }
         markers.current = [];
 
+        // [HQ] 더원에셋 본사 고정 핀 (역삼동 674-9) 추가
+        const hqMarker = new window.naver.maps.Marker({
+          position: new window.naver.maps.LatLng(37.5034, 127.0372),
+          map: nMap.current,
+          icon: {
+            content: `
+              <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+                <div class="pulsating-dot"></div>
+                <div class="office-label">더원에셋 본사</div>
+              </div>
+            `,
+            anchor: new window.naver.maps.Point(6, 6)
+          },
+          zIndex: 999 // 본사 핀은 항상 최상단에 노출
+        });
+        markers.current.push(hqMarker);
+
         if (!matches || !Array.isArray(matches)) return;
 
         matches.forEach(match => {
