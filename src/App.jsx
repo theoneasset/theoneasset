@@ -100,7 +100,7 @@ function App() {
     };
     loadMasterData();
     injectTestData();
-  }, [injectTestData]);
+  }, []); // 의존성 배열을 비워 최초 마운트 시에만 실행되도록 함
 
   const filteredMatches = matches.filter(match => {
     const matchesDong = filters.selectedDongs.length === 0 || 
