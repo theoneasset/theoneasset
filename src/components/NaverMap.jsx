@@ -5,39 +5,30 @@ import BuildingDetailView from './BuildingDetailView';
 
 const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const nMap = useRef(null);
+  const mapRef = useRef(null); // DOM 참조를 위한 Ref 추가
   const markers = useRef([]);
   const infoWindowRoot = useRef(null);
   const [isCadastral, setIsCadastral] = useState(true);
   const [status, setStatus] = useState('loading'); 
   const [isAuthFailed, setIsAuthFailed] = useState(false);
 
-  const CLIENT_ID = import.meta.env.VITE_MY_NAVER_MAP_CLIENT_ID;
+  const CLIENT_ID = 'e895s7e6z8';
+  console.log('🔍 [MAP-DEBUG] Using Client ID:', CLIENT_ID);
 
   // [1] 지도 초기화 로직 (철저한 중복 방지)
   useEffect(() => {
-    if (!CLIENT_ID) {
-      setStatus('config_error');
-      return;
-    }
-
     let isMounted = true;
 
     const initMap = () => {
-      if (!isMounted || !window.naver || !window.naver.maps) return;
+      if (!isMounted || !window.naver || !window.naver.maps || nMap.current) return;
       
-      // 이미 지도가 존재하면 절대로 새로 만들지 않음
-      if (nMap.current) {
-        setStatus('ready');
-        return;
-      }
-
-      const mapContainer = document.getElementById('naver-map-container');
+      const mapContainer = mapRef.current;
       if (!mapContainer) return;
 
       try {
-        const mapInstance = new window.naver.maps.Map('naver-map-container', {
-          center: new window.naver.maps.LatLng(37.5015, 127.0346),
-          zoom: 16,
+        const mapInstance = new window.naver.maps.Map(mapContainer, {
+          center: new window.naver.maps.LatLng(37.3595704, 127.105399),
+          zoom: 10,
           mapTypeControl: true,
           mapTypeControlOptions: {
             style: window.naver.maps.MapTypeControlStyle.BUTTON,
@@ -45,11 +36,16 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           }
         });
         
+        // 인스턴스 선점 저장
+        nMap.current = mapInstance;
+
         window.naver.maps.Event.once(mapInstance, 'init', () => {
           if (!isMounted) return;
-          nMap.current = mapInstance;
           setStatus('ready');
           console.log('✅ [V3-MAP-READY] Map Instance Created Successfully');
+          
+          // 지도가 잘리거나 사라지는 현상 방지를 위해 강제 리사이즈 트리거
+          window.naver.maps.Event.trigger(mapInstance, 'resize');
         });
 
         window.naver.maps.Event.addListener(mapInstance, 'auth_failed', () => {
@@ -65,20 +61,20 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
       }
     };
 
-    const scriptId = 'naver-map-sdk-v3';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.src = `https://openapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${CLIENT_ID}&submodules=geocoder`;
-      script.async = true;
-      script.onload = () => setTimeout(initMap, 500);
-      document.head.appendChild(script);
-    } else {
-      setTimeout(initMap, 200);
-    }
+    const initMapProcess = () => {
+      if (!isMounted) return;
+      if (window.naver && window.naver.maps) {
+        initMap();
+      } else {
+        // 아직 로드되지 않았다면 200ms 후 재시도
+        setTimeout(initMapProcess, 200);
+      }
+    };
+
+    initMapProcess();
 
     return () => { isMounted = false; };
-  }, [CLIENT_ID]);
+  }, []);
 
   // [2] 마커 렌더링 로직 (try-catch로 분리하여 크래시 방지)
   useEffect(() => {
@@ -207,8 +203,8 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   }
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '500px', position: 'relative', background: '#0b0f19' }}>
-      <div id="naver-map-container" style={{ width: '100%', height: '100%', minHeight: '500px' }} />
+    <div style={{ width: '100%', height: '600px', position: 'relative', background: '#0b0f19' }}>
+      <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: '600px' }} />
       
       {status === 'loading' && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 50, background: '#0b1120' }}>
