@@ -525,3 +525,18 @@ body {
     height: 100% !important;
     width: 100% !important;
 }
+
+.zoom-btn {
+  transition: all 0.2s ease;
+  color: white;
+  border-radius: 8px !important;
+}
+
+.zoom-btn:hover {
+  background: var(--primary) !important;
+  transform: scale(1.05);
+}
+
+.zoom-btn:active {
+  transform: scale(0.95);
+}

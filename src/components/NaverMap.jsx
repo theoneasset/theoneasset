@@ -34,10 +34,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
             style: window.naver.maps.MapTypeControlStyle.BUTTON,
             position: window.naver.maps.Position.TOP_LEFT
           },
-          zoomControl: true,
-          zoomControlOptions: {
-            position: window.naver.maps.Position.BOTTOM_RIGHT
-          }
+          zoomControl: false, // 기본 컨트롤은 끕니다.
         });
         
         // 인스턴스 선점 저장
@@ -186,6 +183,13 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
 
   }, [selectedMatch]);
 
+  const handleZoom = (delta) => {
+    if (nMap.current) {
+      const currentZoom = nMap.current.getZoom();
+      nMap.current.setZoom(currentZoom + delta, true); // true로 애니메이션 활성화
+    }
+  };
+
   const toggleCadastral = () => {
     if (nMap.current) {
       const next = !isCadastral;
@@ -225,16 +229,37 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
       )}
 
       {status === 'ready' && (
-        <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <button onClick={onStartScan} disabled={isScanning} className="glass action-btn" style={{ background: 'rgba(99, 102, 241, 0.5)', borderColor: 'rgba(165, 180, 252, 0.3)' }}>
-            <Search size={18} />
-            <span>수집 시작</span>
-          </button>
-          <button onClick={toggleCadastral} className={`glass action-btn ${isCadastral ? 'active' : ''}`}>
-            <Layers size={18} />
-            <span>지적편집도</span>
-          </button>
-        </div>
+        <>
+          {/* 우측 상단 컨트롤 */}
+          <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <button onClick={onStartScan} disabled={isScanning} className="glass action-btn" style={{ background: 'rgba(99, 102, 241, 0.5)', borderColor: 'rgba(165, 180, 252, 0.3)' }}>
+              <Search size={18} />
+              <span>수집 시작</span>
+            </button>
+            <button onClick={toggleCadastral} className={`glass action-btn ${isCadastral ? 'active' : ''}`}>
+              <Layers size={18} />
+              <span>지적편집도</span>
+            </button>
+          </div>
+
+          {/* 좌측 하단 커스텀 줌 컨트롤 */}
+          <div style={{ position: 'absolute', bottom: '30px', left: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button 
+              onClick={() => handleZoom(1)} 
+              className="glass zoom-btn"
+              style={{ width: '40px', height: '40px', fontSize: '20px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              +
+            </button>
+            <button 
+              onClick={() => handleZoom(-1)} 
+              className="glass zoom-btn"
+              style={{ width: '40px', height: '40px', fontSize: '20px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              -
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
