@@ -57,16 +57,20 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           setTimeout(forceResize, 300); // 2차 리사이즈로 타이밍 완벽 방어
         });
 
-        // [핵심] 위치 변경 시 미니맵 중심 및 마커 좌표 동기화
-        window.naver.maps.Event.addListener(panorama.current, 'position_changed', () => {
+        // [핵심] 이중 이벤트 리스너로 위치 변경 완벽 감시 (position & pano)
+        const syncMarkerPosition = () => {
           const newPos = panorama.current.getPosition();
           if (miniMap.current) {
             miniMap.current.setCenter(newPos);
           }
           if (miniMarker.current) {
             miniMarker.current.setPosition(newPos);
+            console.log("[MAP] 마커 및 미니맵 중심 동기화 완료:", newPos);
           }
-        });
+        };
+
+        window.naver.maps.Event.addListener(panorama.current, 'position_changed', syncMarkerPosition);
+        window.naver.maps.Event.addListener(panorama.current, 'pano_changed', syncMarkerPosition);
 
         // POV 변경 리스너 (바닐라 JS 방식)
         window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
