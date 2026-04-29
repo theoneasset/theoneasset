@@ -47,18 +47,22 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
         if (miniMarker.current) miniMarker.current.setPosition(newPos);
       });
 
-      // POV 변경 시 바닐라 JS 방식으로 DOM 직접 제어 (디버깅 로그 포함)
+      // POV 변경 시 바닐라 JS 방식으로 DOM 직접 제어 (각도 추출 로직 정밀 수정)
       window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
-        const pov = panorama.current.getPov();
-        console.log("[MAP] 현재 파노라마 각도(heading):", pov.heading); // 사용자 요청: pan 대신 공식 명칭 heading 사용
+        // [수정] 이벤트 객체 대신 인스턴스 메서드 getPov() 직접 호출
+        const currentPov = panorama.current.getPov();
+        // heading(공식) 또는 pan(사용자 제안) 중 존재하는 값을 선택
+        const currentPan = (currentPov.heading !== undefined) ? currentPov.heading : (currentPov.pan || 0);
+        
+        console.log("[MAP] 추출된 각도 값:", currentPan);
         
         const iconEl = document.getElementById('minimap-dir-icon');
-        console.log("[MAP] 아이콘 요소 찾음?:", iconEl ? "성공 (ID 존재)" : "실패 (ID 못찾음)");
-        
         if (iconEl) {
-          const rotation = `rotate(${pov.heading}deg)`;
+          const rotation = `rotate(${currentPan}deg)`;
           iconEl.style.transform = rotation;
-          console.log("[MAP] CSS transform 주입 완료:", rotation);
+          console.log("[MAP] 마커 회전 적용 완료:", rotation);
+        } else {
+          console.log("[MAP] 경고: 아이콘 요소를 찾지 못했습니다.");
         }
       });
     } else {
