@@ -18,6 +18,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [status, setStatus] = useState('loading'); 
   const [isAuthFailed, setIsAuthFailed] = useState(false);
   const [isStreetViewMode, setIsStreetViewMode] = useState(false);
+  const [isHybrid, setIsHybrid] = useState(false);
   const [activePanoCoord, setActivePanoCoord] = useState(null);
   const [showPanoLabels, setShowPanoLabels] = useState(true);
   const [isPanoMinimized, setIsPanoMinimized] = useState(false);
@@ -42,13 +43,18 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           aroundControl: false,
         });
 
-        // [핵심] 파노라마 로드 완료 후 강제 리사이즈 (검은 화면 방지)
+        // [핵심] 파노라마 로드 완료 후 강제 리사이즈 (검은 화면 방지 2중 방어)
         window.naver.maps.Event.once(panorama.current, 'init', () => {
-          setTimeout(() => {
+          const forceResize = () => {
             if (panorama.current) {
               window.naver.maps.Event.trigger(panorama.current, 'resize');
+              // 크기를 명시적으로 한 번 더 설정
+              const size = panorama.current.getSize();
+              panorama.current.setSize(size);
             }
-          }, 100);
+          };
+          setTimeout(forceResize, 100);
+          setTimeout(forceResize, 300); // 2차 리사이즈로 타이밍 완벽 방어
         });
 
         // 위치 변경 리스너
@@ -180,7 +186,17 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
     } else {
       streetLayer.current.setMap(nMap.current);
       setIsStreetViewMode(true);
+      // 거리뷰 레이어가 켜질 때 지도 타입 초기화 (선택 사항)
     }
+  };
+
+  const toggleHybrid = () => {
+    if (!nMap.current) return;
+    const newMode = !isHybrid;
+    setIsHybrid(newMode);
+    nMap.current.setMapTypeId(
+      newMode ? window.naver.maps.MapTypeId.HYBRID : window.naver.maps.MapTypeId.NORMAL
+    );
   };
   useEffect(() => {
     let isMounted = true;
@@ -496,6 +512,15 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
 
           {/* 우측 중앙 툴바 컨트롤 모음 */}
           <div style={{ position: 'absolute', top: '140px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* 항공뷰 버튼 */}
+            <button 
+              onClick={toggleHybrid} 
+              className={`glass map-tool-btn ${isHybrid ? 'active' : ''}`}
+            >
+              <Layers size={20} />
+              <span className="tool-label">항공뷰</span>
+            </button>
+            
             {/* 거리뷰 버튼 */}
             <button 
               onClick={toggleStreetView} 
