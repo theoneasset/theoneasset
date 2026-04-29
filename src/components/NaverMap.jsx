@@ -88,6 +88,15 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           mapDataControl: false
         });
 
+        // [핵심] 미니맵 클릭 시 거리뷰 순간이동(Teleport) 리스너 추가
+        window.naver.maps.Event.addListener(miniMap.current, 'click', (e) => {
+          if (panorama.current) {
+            panorama.current.setPosition(e.coord);
+            // 이동 후 화면이 깨지지 않도록 리사이즈 트리거
+            window.naver.maps.Event.trigger(panorama.current, 'resize');
+          }
+        });
+
         // 미니맵 리사이즈 트리거
         window.naver.maps.Event.trigger(miniMap.current, 'resize');
 
