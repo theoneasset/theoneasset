@@ -27,8 +27,8 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
 
       try {
         const mapInstance = new window.naver.maps.Map(mapContainer, {
-          center: new window.naver.maps.LatLng(37.3595704, 127.105399),
-          zoom: 10,
+          center: new window.naver.maps.LatLng(37.5042513, 127.0402401),
+          zoom: 14,
           mapTypeControl: true,
           mapTypeControlOptions: {
             style: window.naver.maps.MapTypeControlStyle.BUTTON,
