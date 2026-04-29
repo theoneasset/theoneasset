@@ -50,10 +50,6 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
       setIsStreetViewMode(true);
     }
   };
-
-  const closePanorama = () => {
-    setActivePano(null);
-  };
   useEffect(() => {
     let isMounted = true;
 
