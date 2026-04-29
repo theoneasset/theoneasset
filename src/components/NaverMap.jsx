@@ -47,22 +47,14 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
         if (miniMarker.current) miniMarker.current.setPosition(newPos);
       });
 
-      // POV 변경 시 바닐라 JS 방식으로 DOM 직접 제어 (각도 추출 로직 정밀 수정)
+      // POV 변경 시 바닐라 JS 방식으로 DOM 직접 제어 (최종 연동 완료)
       window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
-        // [수정] 이벤트 객체 대신 인스턴스 메서드 getPov() 직접 호출
         const currentPov = panorama.current.getPov();
-        // heading(공식) 또는 pan(사용자 제안) 중 존재하는 값을 선택
         const currentPan = (currentPov.heading !== undefined) ? currentPov.heading : (currentPov.pan || 0);
-        
-        console.log("[MAP] 추출된 각도 값:", currentPan);
         
         const iconEl = document.getElementById('minimap-dir-icon');
         if (iconEl) {
-          const rotation = `rotate(${currentPan}deg)`;
-          iconEl.style.transform = rotation;
-          console.log("[MAP] 마커 회전 적용 완료:", rotation);
-        } else {
-          console.log("[MAP] 경고: 아이콘 요소를 찾지 못했습니다.");
+          iconEl.style.transform = `rotate(${currentPan}deg)`;
         }
       });
     } else {
@@ -86,9 +78,11 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
 
       // 방향 표시용 마커 생성 (ID 부여 및 단 1회 렌더링)
       const currentPov = panorama.current ? panorama.current.getPov() : { heading: 0 };
+      const currentPan = (currentPov.heading !== undefined) ? currentPov.heading : (currentPov.pan || 0);
+      
       const markerHtml = `
         <div style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
-          <div id="minimap-dir-icon" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform: rotate(${currentPov.heading}deg); transition: transform 0.1s ease-out;">
+          <div id="minimap-dir-icon" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform: rotate(${currentPan}deg); transition: transform 0.1s ease-out;">
             <svg width="100" height="100" viewBox="0 0 100 100" style="overflow: visible;">
               <path d="M 50 50 L 25 10 A 40 40 0 0 1 75 10 Z" fill="rgba(34, 197, 94, 0.45)" stroke="rgba(34, 197, 94, 0.2)" stroke-width="0.5" />
               <circle cx="50" cy="50" r="7.5" fill="white" stroke="#334155" stroke-width="2.5" />
@@ -97,8 +91,6 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           </div>
         </div>
       `;
-      
-      console.log("[MAP] 미니맵 마커 생성됨 (ID: minimap-dir-icon 포함)");
       
       miniMarker.current = new window.naver.maps.Marker({
         position: activePanoCoord,
