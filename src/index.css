@@ -699,6 +699,45 @@ body {
   border: 3px solid white;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
   background: #f1f5f9;
+  position: relative;
+}
+
+.minimap-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: white;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.minimap-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  width: 12px;
+  height: 8px;
+  border-top: 1.5px solid #cbd5e1;
+  border-bottom: 1.5px solid #cbd5e1;
+  transform: rotate(-45deg);
+}
+
+.minimap-resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 8px;
+  width: 12px;
+  height: 1.5px;
+  background: #cbd5e1;
+  transform: rotate(-45deg);
 }
 
 /* 토글 스위치 스타일 */

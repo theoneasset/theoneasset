@@ -8,6 +8,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const mapRef = useRef(null); // DOM 참조를 위한 Ref 추가
   const panoRef = useRef(null); // 파노라마 전용 Ref
   const miniMapRef = useRef(null); // 미니맵 전용 Ref
+  const miniMarker = useRef(null); // 방향 표시 마커 전용 Ref
   const panorama = useRef(null);
   const miniMap = useRef(null);
   const streetLayer = useRef(null);
@@ -35,6 +36,13 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
         window.naver.maps.Event.addListener(panorama.current, 'position_changed', () => {
           const newPos = panorama.current.getPosition();
           if (miniMap.current) miniMap.current.setCenter(newPos);
+          if (miniMarker.current) miniMarker.current.setPosition(newPos);
+        });
+
+        window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
+          const pov = panorama.current.getPov();
+          const iconEl = document.getElementById('pano-direction-icon');
+          if (iconEl) iconEl.style.transform = `rotate(${pov.heading}deg)`;
         });
       } else {
         panorama.current.setPosition(activePanoCoord);
@@ -45,8 +53,8 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
         if (miniMapRef.current && !miniMap.current) {
           miniMap.current = new window.naver.maps.Map(miniMapRef.current, {
             center: activePanoCoord,
-            zoom: 16,
-            draggable: false,
+            zoom: 17,
+            draggable: true,
             scrollWheel: false,
             disableDoubleClickZoom: true,
             mapDataControl: false
@@ -55,8 +63,23 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           // 미니맵에도 거리뷰 레이어 추가
           const miniStreetLayer = new window.naver.maps.StreetLayer();
           miniStreetLayer.setMap(miniMap.current);
+
+          // 방향 표시 마커 (Naver 스타일 회전 콘)
+          miniMarker.current = new window.naver.maps.Marker({
+            position: activePanoCoord,
+            map: miniMap.current,
+            icon: {
+              content: `
+                <div id="pano-direction-icon" style="position: relative; width: 80px; height: 80px; transform-origin: center; transition: transform 0.1s; display: flex; align-items: center; justify-content: center;">
+                  <div style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.5); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
+                  <div style="position: relative; width: 14px; height: 14px; background: white; border: 2.5px solid #334155; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); z-index: 2;"></div>
+                </div>
+              `,
+              anchor: new window.naver.maps.Point(40, 40)
+            }
+          });
         }
-      }, 100);
+      }, 200);
     }
   }, [activePanoCoord]);
 
@@ -340,6 +363,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
             </div>
             
             <div className="pano-minimap-container">
+              <div className="minimap-resize-handle"></div>
               <div ref={miniMapRef} style={{ width: '100%', height: '100%' }} />
             </div>
           </div>
