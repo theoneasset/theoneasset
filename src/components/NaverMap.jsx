@@ -102,7 +102,7 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
             content: `
               <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
                 <div class="pulsating-dot"></div>
-                <div class="office-label">더원에셋 본사</div>
+                <div class="office-label">더원에셋</div>
               </div>
             `,
             anchor: new window.naver.maps.Point(6, 6)
