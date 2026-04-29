@@ -50,15 +50,19 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
       window.naver.maps.Event.addListener(panorama.current, 'pov_changed', () => {
         const pov = panorama.current.getPov();
         if (miniMarker.current) {
-          // 마커 아이콘을 setIcon으로 업데이트하여 시선 방향(heading) 반영
           miniMarker.current.setIcon({
             content: `
-              <div id="pano-direction-cone" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; transform: rotate(${pov.heading}deg); transition: transform 0.1s ease-out;">
-                <div style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.7); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
-                <div style="position: relative; width: 14px; height: 14px; background: white; border: 2.5px solid #334155; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); z-index: 2;"></div>
+              <div id="pano-direction-cone" style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; transform: rotate(${pov.heading}deg); transition: transform 0.1s ease-out;">
+                <svg width="100" height="100" viewBox="0 0 100 100" style="overflow: visible;">
+                  <!-- 부채꼴 시야각 (레이더) -->
+                  <path d="M 50 50 L 25 10 A 40 40 0 0 1 75 10 Z" fill="rgba(34, 197, 94, 0.45)" stroke="rgba(34, 197, 94, 0.2)" stroke-width="0.5" />
+                  <!-- 중앙 포인트 마커 -->
+                  <circle cx="50" cy="50" r="7.5" fill="white" stroke="#334155" stroke-width="2.5" />
+                  <circle cx="50" cy="50" r="8" fill="none" stroke="black" stroke-opacity="0.1" stroke-width="0.5" />
+                </svg>
               </div>
             `,
-            anchor: new window.naver.maps.Point(40, 40)
+            anchor: new window.naver.maps.Point(50, 50)
           });
         }
       });
@@ -81,19 +85,22 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
       const miniStreetLayer = new window.naver.maps.StreetLayer();
       miniStreetLayer.setMap(miniMap.current);
 
-      // 방향 표시용 마커 생성
-      const currentPov = panorama.current.getPov();
+      // 방향 표시용 마커 생성 (초기 시선 반영)
+      const currentPov = panorama.current ? panorama.current.getPov() : { heading: 0 };
       miniMarker.current = new window.naver.maps.Marker({
         position: activePanoCoord,
         map: miniMap.current,
         icon: {
           content: `
-            <div id="pano-direction-cone" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; transform: rotate(${currentPov.heading}deg); transition: transform 0.1s ease-out;">
-              <div style="position: absolute; top: 0; width: 60px; height: 40px; background: rgba(34, 197, 94, 0.7); clip-path: polygon(50% 100%, 0 0, 100% 0); filter: blur(1px);"></div>
-              <div style="position: relative; width: 14px; height: 14px; background: white; border: 2.5px solid #334155; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.4); z-index: 2;"></div>
+            <div id="pano-direction-cone" style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; transform: rotate(${currentPov.heading}deg); transition: transform 0.1s ease-out;">
+              <svg width="100" height="100" viewBox="0 0 100 100" style="overflow: visible;">
+                <path d="M 50 50 L 25 10 A 40 40 0 0 1 75 10 Z" fill="rgba(34, 197, 94, 0.45)" stroke="rgba(34, 197, 94, 0.2)" stroke-width="0.5" />
+                <circle cx="50" cy="50" r="7.5" fill="white" stroke="#334155" stroke-width="2.5" />
+                <circle cx="50" cy="50" r="8" fill="none" stroke="black" stroke-opacity="0.1" stroke-width="0.5" />
+              </svg>
             </div>
           `,
-          anchor: new window.naver.maps.Point(40, 40)
+          anchor: new window.naver.maps.Point(50, 50)
         }
       });
     };
