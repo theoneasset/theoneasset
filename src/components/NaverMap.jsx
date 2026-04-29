@@ -491,7 +491,8 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
               <div className="mini-zoom-controls">
                 <button 
                   className="mini-zoom-btn"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation(); // 지도 클릭 이벤트로 번지지 않게 차단
                     if (miniMap.current) {
                       const newZoom = miniMap.current.getZoom() + 1;
                       miniMap.current.setZoom(newZoom);
@@ -504,7 +505,8 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
                 <div className="mini-zoom-divider"></div>
                 <button 
                   className="mini-zoom-btn"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation(); // 지도 클릭 이벤트로 번지지 않게 차단
                     if (miniMap.current) {
                       const newZoom = miniMap.current.getZoom() - 1;
                       miniMap.current.setZoom(newZoom);
