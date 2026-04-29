@@ -115,8 +115,8 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
         const currentPan = (currentPov.heading !== undefined) ? currentPov.heading : (currentPov.pan || 0);
         
         const markerHtml = `
-          <div style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
-            <div id="minimap-dir-icon" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform: rotate(${currentPan}deg); transition: transform 0.1s ease-out;">
+          <div class="marker-position-wrapper" style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; position: relative;">
+            <div id="minimap-dir-icon" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform: rotate(${currentPan}deg); transition: transform 0.1s ease-out; transform-origin: center center;">
               <svg width="100" height="100" viewBox="0 0 100 100" style="overflow: visible;">
                 <path d="M 50 50 L 25 10 A 40 40 0 0 1 75 10 Z" fill="rgba(34, 197, 94, 0.45)" stroke="rgba(34, 197, 94, 0.2)" stroke-width="0.5" />
                 <circle cx="50" cy="50" r="7.5" fill="white" stroke="#334155" stroke-width="2.5" />
