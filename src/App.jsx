@@ -56,21 +56,6 @@ function App() {
   const injectTestData = useCallback(() => {
     const testData = [
       {
-        id: 'test-1',
-        주소: '서울특별시 강남구 역삼동 674-9',
-        건물명: '더원에셋 타워 (본사)',
-        보증금: 100000000,
-        월세: 8500000,
-        전용면적: 450,
-        matchRate: 98,
-        lat: 37.5042513,
-        lon: 127.0402401,
-        summary: '역삼역 초역세권, 더원에셋 본사 입점 프리미엄 매물',
-        link: 'https://land.naver.com',
-        isExclusive: true,
-        analysisReport: "역삼역 7번 출구 도보 1분 거리의 초역세권 건물로, 더원에셋 본사가 직접 관리하는 매물입니다. 현재 15층 전용면적이 임대로 나왔으며, IT 기업의 오피스로 최적화되어 있습니다."
-      },
-      {
         id: 'test-2',
         주소: '서울특별시 강남구 논현동 123-4',
         건물명: '논현 스마트 빌딩',
