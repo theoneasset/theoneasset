@@ -486,6 +486,35 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
                   <line x1="4" y1="16" x2="20" y2="16" />
                 </svg>
               </div>
+
+              {/* 미니맵 전용 줌 컨트롤 (+/-) */}
+              <div className="mini-zoom-controls">
+                <button 
+                  className="mini-zoom-btn"
+                  onClick={() => {
+                    if (miniMap.current) {
+                      const newZoom = miniMap.current.getZoom() + 1;
+                      miniMap.current.setZoom(newZoom);
+                    }
+                  }}
+                  title="확대"
+                >
+                  <Plus size={14} />
+                </button>
+                <div className="mini-zoom-divider"></div>
+                <button 
+                  className="mini-zoom-btn"
+                  onClick={() => {
+                    if (miniMap.current) {
+                      const newZoom = miniMap.current.getZoom() - 1;
+                      miniMap.current.setZoom(newZoom);
+                    }
+                  }}
+                  title="축소"
+                >
+                  <Minus size={14} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
