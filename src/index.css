@@ -702,6 +702,42 @@ body {
   position: relative;
 }
 
+/* 미니맵 리사이즈 핸들 (네이버 스타일) */
+.mini-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  background: white;
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+  cursor: nesw-resize;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 2px 4px;
+  color: #94a3b8;
+  transition: color 0.2s, background-color 0.2s;
+  box-shadow: -1px 1px 3px rgba(0,0,0,0.1);
+}
+
+.mini-resize-handle:hover {
+  color: #475569;
+  background-color: #f8fafc;
+}
+
+.mini-resize-handle svg {
+  transform: rotate(-45deg);
+  margin-top: 2px;
+  margin-right: -1px;
+}
+
+/* 드래그 중인 상태의 커서 고정 */
+body.resizing {
+  cursor: nesw-resize !important;
+}
+
 .minimap-resize-handle {
   position: absolute;
   top: 0;

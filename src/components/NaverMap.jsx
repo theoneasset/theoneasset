@@ -21,6 +21,8 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
   const [activePanoCoord, setActivePanoCoord] = useState(null);
   const [showPanoLabels, setShowPanoLabels] = useState(true);
   const [isPanoMinimized, setIsPanoMinimized] = useState(false);
+  const [miniMapSize, setMiniMapSize] = useState({ width: 200, height: 160 });
+  const [isResizing, setIsResizing] = useState(false);
 
   // [거리뷰 & 미니맵 인스턴스 초기화 및 동기화 로직]
   useEffect(() => {
@@ -115,6 +117,48 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
     const timer = setTimeout(initAll, 400);
     return () => clearTimeout(timer);
   }, [activePanoCoord]);
+
+  // [미니맵 리사이즈 핸들러]
+  const handleResizeStart = (e) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e) => {
+      // 미니맵 컨테이너 위치 기준 마우스 좌표 계산
+      const container = miniMapRef.current?.parentElement;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const newWidth = Math.max(150, e.clientX - rect.left);
+      const newHeight = Math.max(120, rect.bottom - e.clientY);
+
+      setMiniMapSize({ width: newWidth, height: newHeight });
+      
+      // 지도 엔진에 즉시 알림 (선택 사항: 성능을 위해 debounce 가능)
+      if (miniMap.current) {
+        window.naver.maps.Event.trigger(miniMap.current, 'resize');
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      // 드래그 종료 시 최종 리사이즈 확정
+      if (miniMap.current) {
+        window.naver.maps.Event.trigger(miniMap.current, 'resize');
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
 
   const initPanorama = (coord) => {
     setActivePanoCoord(coord);
@@ -395,9 +439,28 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
               <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 400, marginLeft: '10px' }}>2024년 01월 (최신)</span>
             </div>
             
-            <div className="pano-minimap-container">
-              <div className="minimap-resize-handle"></div>
+            <div 
+              className="pano-minimap-container"
+              style={{ 
+                width: `${miniMapSize.width}px`, 
+                height: `${miniMapSize.height}px`,
+                cursor: isResizing ? 'nwse-resize' : 'default'
+              }}
+            >
               <div ref={miniMapRef} style={{ width: '100%', height: '100%' }} />
+              
+              {/* 네이버 스타일 리사이즈 핸들 (우측 상단) */}
+              <div 
+                className="mini-resize-handle"
+                onMouseDown={handleResizeStart}
+                title="사이즈 조절"
+              >
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="4" y1="8" x2="20" y2="8" />
+                  <line x1="4" y1="12" x2="20" y2="12" />
+                  <line x1="4" y1="16" x2="20" y2="16" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
