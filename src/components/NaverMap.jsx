@@ -242,8 +242,8 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
             </button>
           </div>
 
-          {/* 좌측 하단 커스텀 줌 컨트롤 */}
-          <div style={{ position: 'absolute', bottom: '30px', left: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* 우측 하단 커스텀 줌 컨트롤 */}
+          <div style={{ position: 'absolute', bottom: '30px', right: '20px', zIndex: 100, display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <button 
               onClick={() => handleZoom(1)} 
               className="glass zoom-btn"
