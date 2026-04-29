@@ -88,21 +88,21 @@ const NaverMap = ({ matches, selectedMatch, isScanning, onStartScan }) => {
           mapDataControl: false
         });
 
-        // [핵심] 미니맵 클릭 시 거리뷰 순간이동(Teleport) 리스너 추가
+        // [핵심 1] 미니맵 클릭 시 거리뷰 순간이동(Teleport) 리스너
         window.naver.maps.Event.addListener(miniMap.current, 'click', (e) => {
           if (panorama.current) {
             panorama.current.setPosition(e.coord);
-            // 이동 후 화면이 깨지지 않도록 리사이즈 트리거
             window.naver.maps.Event.trigger(panorama.current, 'resize');
           }
         });
 
-        // 미니맵 리사이즈 트리거
+        // [핵심 2] 미니맵 리사이즈 트리거
         window.naver.maps.Event.trigger(miniMap.current, 'resize');
 
         const miniStreetLayer = new window.naver.maps.StreetLayer();
         miniStreetLayer.setMap(miniMap.current);
 
+        // [핵심 3] 방향 마커 및 동기화 초기화
         const currentPov = panorama.current ? panorama.current.getPov() : { heading: 0 };
         const currentPan = (currentPov.heading !== undefined) ? currentPov.heading : (currentPov.pan || 0);
         
